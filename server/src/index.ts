@@ -17,6 +17,12 @@ app.get('/', ( req: Request, res: Response ) => {
     res.send('Asset Manager API con Typescript funcionando 🚀');
 });
 
+// Test client conection
+app.get('/ping', (req: Request, res: Response) => {
+    res.status(200)
+        .json({ message: 'pong' });
+}); 
+
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`)
 });
