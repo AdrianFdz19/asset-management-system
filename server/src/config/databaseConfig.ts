@@ -15,6 +15,6 @@ pool.on('connect', () => {
     console.log('✅ Base de Datos conectada');
 });
 
-pool.on('error', (err) => {
+pool.on('error', (err: Error) => {
     console.error('❌ Error inesperado en el pool de Postgres', err);
 });
