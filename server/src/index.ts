@@ -1,9 +1,6 @@
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { envs } from './config/envs';
-
-dotenv.config();
 
 const app: Application = express();
  
@@ -11,8 +8,18 @@ const PORT = process.env.PORT || 4000;
 
 // Midlewares
 app.use(express.json());
+
+const whiteList = ['http://localhost:5173', 'https://assets-system-manager-app.netlify.app'];
+
 app.use(cors({
-    origin: envs.CLIENT_URL
+  origin: function (origin, callback) {
+    // Si el origen está en la lista o es undefined (ej. Postman)
+    if (!origin || whiteList.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Error de CORS: Origen no permitido'));
+    }
+  }
 }));
 
 // Ruta de prueba
