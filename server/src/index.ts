@@ -1,13 +1,12 @@
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import { assets } from './routes/assetsRoutes';
 
 const app: Application = express();
  
 const PORT = process.env.PORT || 4000;
 
 // Midlewares
-app.use(express.json());
 
 const whiteList = ['http://localhost:5173', 'https://assets-system-manager-app.netlify.app'];
 
@@ -21,6 +20,11 @@ app.use(cors({
     }
   }
 }));
+
+app.use(express.json());
+
+// Rutas
+app.use('/assets', assets);
 
 // Ruta de prueba
 app.get('/', ( req: Request, res: Response ) => {

@@ -1,20 +1,29 @@
 import { Pool } from 'pg';
 import { envs } from './envs';
 
-// Configuramos el pool
-export const pool = new Pool({
-    connectionString: envs.DATABASE_URL,
-    // Importante: Render requiere SSL para conexiones externas
-    ssl: envs.NODE_ENV === 'production' 
-        ? { rejectUnauthorized: false } 
-        : false
-});
+let config;
 
-// Verificación de conexión (Esto aparecerá en tus logs de Render)
+if (envs.NODE_ENV === 'production') {
+    // Configuración para RENDER (Producción)
+    config = {
+        connectionString: envs.DATABASE_URL,
+        ssl: {
+            rejectUnauthorized: false
+        }
+    };
+} else {
+    // Configuración para TU PC (Development)
+    config = {
+        user: 'postgres',
+        database: 'assets-system-manager',
+        port: 5432,
+        password: '1214',
+        host: 'localhost'
+    };
+}
+
+export const pool = new Pool(config);
+
 pool.on('connect', () => {
-    console.log('✅ Base de Datos conectada');
-});
-
-pool.on('error', (err: Error) => {
-    console.error('❌ Error inesperado en el pool de Postgres', err);
+    console.log(`✅ Base de Datos conectada en modo: ${envs.NODE_ENV}`);
 });

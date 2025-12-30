@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import './App.css'
 import { Route, Routes } from 'react-router-dom';
+import AssetsList from './features/assets/AssetsList';
 
 function App() {
 
@@ -29,6 +30,9 @@ function App() {
       <div className="app">
         <Routes>
           <Route path='/' element={<><h1>Assets System Manager</h1></>}></Route>
+          <Route path='/assets' >
+            <Route index element={<AssetsList />} ></Route>
+          </Route>
         </Routes>
       </div>
     </>
