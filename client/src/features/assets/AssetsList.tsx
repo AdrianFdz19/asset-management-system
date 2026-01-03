@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { assetsError, assetsStatus, fetchAssets, selectAllAssets, type Asset } from './assetsSlice';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import AddAssetForm from './AddAssetForm';
 
 export default function AssetsList() {
     // 1. Obtenemos el dispatch al inicio del componente
@@ -25,6 +26,7 @@ export default function AssetsList() {
 
     return (
         <section className="p-4">
+            <AddAssetForm />
             <h1 className="text-2xl font-bold mb-4">Assets List</h1>
             <div className="grid gap-4">
                 {assets.map((asset: Asset) => (

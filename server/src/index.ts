@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 4000;
 
 // Midlewares
 
-const whiteList = ['http://localhost:5173', 'https://assets-system-manager-app.netlify.app'];
+const whiteList = ['http://localhost:5174', 'https://assets-system-manager-app.netlify.app'];
 
 app.use(cors({
   origin: function (origin, callback) {

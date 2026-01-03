@@ -1,5 +1,6 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createEntityAdapter, createSlice, type EntityState } from "@reduxjs/toolkit";
 import axios from "axios";
+import type { RootState } from "../../app/store";
 
 export type Asset = {
     id: number;
@@ -13,20 +14,22 @@ export type Asset = {
     created_at: string;
 };
 
-interface AssetsState {
-    items: Asset[];
+// 1. Dile al adaptador que manejará objetos de tipo 'Asset'
+const assetsAdapter = createEntityAdapter<Asset>();
+
+// 2. Tu interfaz debe extender EntityState para incluir 'ids' y 'entities' automáticamente
+interface AssetsState extends EntityState<Asset, number> {
     status: 'idle' | 'loading' | 'fulfilled' | 'error';
     error: string | null;
 };
 
-const initialState: AssetsState = {
-    items: [],
+const initialState: AssetsState = assetsAdapter.getInitialState({
     status: 'idle',
     error: null,
-};
+});
 
 // Acción asíncrona para traer activos
-export const fetchAssets = createAsyncThunk(
+export const fetchAssets = createAsyncThunk<Asset[], void, { rejectValue: string }>(
     'assets/fetchAll',
     async (_, { rejectWithValue }) => {
         try {
@@ -54,7 +57,7 @@ const assetsSlice = createSlice({
             })
             .addCase(fetchAssets.fulfilled, (state, action) => {
                 state.status = 'fulfilled';
-                state.items = action.payload;
+                assetsAdapter.upsertMany(state, action.payload);
             })
             .addCase(fetchAssets.rejected, (state, action) => {
                 state.status = 'error';
@@ -63,8 +66,13 @@ const assetsSlice = createSlice({
     }
 });
 
-export const selectAllAssets = (state: any) => state.assets.items;
-export const assetsStatus = (state: any) => state.assets.status;
-export const assetsError = (state: any) => state.assets.error;
+export const {
+    selectAll: selectAllAssets,
+    selectIds: selectAssetsIds,
+    selectById: selectAssetById,
+} = assetsAdapter.getSelectors((state: RootState) => state.assets);
+
+export const assetsStatus = (state: RootState) => state.assets.status;
+export const assetsError = (state: RootState) => state.assets.error;
 
 export default assetsSlice.reducer;
