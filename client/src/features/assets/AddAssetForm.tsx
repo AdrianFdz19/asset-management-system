@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { useAddAssetMutation } from '../../api/apiSlice';
+import { useAddAssetMutation } from './assetsSlice';
+import { useAppSelector } from '../../app/hooks';
+import { selectAllCategories, useGetCategoriesQuery } from '../categories/categoriesSlice';
 
 export default function AddAssetForm() {
     // 1. Estados iniciales (Mantenemos los tipos de tu objeto Asset)
@@ -10,6 +12,14 @@ export default function AddAssetForm() {
     const [purchaseDate, setPurchaseDate] = useState('');
     const [categoryId, setCategoryId] = useState('');
     const [userId, setUserId] = useState('');
+    const [errorMsg, setErrorMsg] = useState('');
+
+    // Traer la información de las categorias
+    const {
+        isSuccess
+    } = useGetCategoriesQuery();
+
+    const categories = useAppSelector(selectAllCategories);
 
     // Validación simple para el botón
     const canSave = [name, serialNumber, value, categoryId].every(Boolean);
@@ -23,6 +33,7 @@ export default function AddAssetForm() {
         e.preventDefault();
 
         if (canSubmit) {
+            setErrorMsg('');
             const newAsset = {
                 // id: Number(nanoid()), // Nota: Si usas Postgres, mejor deja que el DB genere el ID
                 name,
@@ -48,8 +59,9 @@ export default function AddAssetForm() {
                 setUserId('');
 
                 alert("Asset added successfully!");
-            } catch (err) {
-                console.error('Failed to save the asset: ', err);
+            } catch (err: any) {
+                const message = err.data?.message || 'Failed to save the asset';
+                setErrorMsg(message);
             }
         }
     };
@@ -170,14 +182,21 @@ export default function AddAssetForm() {
 
                 <div style={{ display: 'flex', gap: '15px' }}>
                     <div style={{ ...styles.formGroup, flex: 1 }}>
-                        <label style={styles.label}>Category ID</label>
-                        <input
-                            style={styles.input}
-                            type="number"
-                            value={categoryId}
+                        <label style={styles.label}>Category</label>
+                        <select
+                            name="categories"
+                            id="categories"
+                            style={styles.select}
+                            value={categoryId}  
                             onChange={(e) => setCategoryId(e.target.value)}
-                            placeholder="1, 2, 3..."
-                        />
+                        >
+                            <option value="">Select a category</option>
+                            {categories.map(cat => (
+                                <option key={cat.id} value={cat.id}>
+                                    {cat.name}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     <div style={{ ...styles.formGroup, flex: 1 }}>
@@ -191,6 +210,8 @@ export default function AddAssetForm() {
                         />
                     </div>
                 </div>
+
+                {errorMsg && <p style={{ color: '#ff7b72', fontSize: '14px', marginTop: '10px' }}>{errorMsg}</p>}
 
                 <button
                     type="submit"

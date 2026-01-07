@@ -1,9 +1,9 @@
-import { Request, Response, Router } from 'express'
+import { NextFunction, Request, Response, Router } from 'express'
 import { pool } from '../config/databaseConfig';
 
 export const assets = Router();
 
-assets.get('/', async (req: Request, res: Response) => {
+assets.get('/', async (req: Request, res: Response, next: NextFunction) => {
     try {
         const query = `SELECT * FROM assets`;
         const response = await pool.query(query);
@@ -15,15 +15,11 @@ assets.get('/', async (req: Request, res: Response) => {
                 data
             });
     } catch (err) {
-        console.error(err);
-        res.status(500)
-            .json({
-                message: err,
-            });
+        next(err);
     }
 });
 
-assets.post('/', async (req: Request, res: Response) => {
+assets.post('/', async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {
             name,
@@ -66,11 +62,7 @@ assets.post('/', async (req: Request, res: Response) => {
                 data
             });
     } catch (err) {
-        console.error(err);
-        res.status(500)
-            .json({
-                message: err,
-            });
+        next(err);
     }
 });
 

@@ -1,10 +1,12 @@
 import {configureStore} from '@reduxjs/toolkit'
-import assetsReducer from '../features/assets/assetsSlice';
+import { apiSlice } from '../features/api/apiSlice';
 
 export const store = configureStore({
     reducer: {
-        assets: assetsReducer,
-    }
+        [ apiSlice.reducerPath ]: apiSlice.reducer,
+    },
+    middleware: getDefaultMiddleware => 
+        getDefaultMiddleware().concat(apiSlice.middleware)
 });
 
 // Tipos cruciales para usar Redux con TS

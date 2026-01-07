@@ -1,6 +1,8 @@
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import { assets } from './routes/assetsRoutes';
+import { errorHandler } from './middleware/errorHandler';
+import { categories } from './routes/categoriesRoutes';
 
 const app: Application = express();
  
@@ -8,7 +10,7 @@ const PORT = process.env.PORT || 4000;
 
 // Midlewares
 
-const whiteList = ['http://localhost:5174', 'https://assets-system-manager-app.netlify.app'];
+const whiteList = ['http://localhost:5173', 'https://assets-system-manager-app.netlify.app'];
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -25,6 +27,7 @@ app.use(express.json());
 
 // Rutas
 app.use('/assets', assets);
+app.use('/categories', categories);
 
 // Ruta de prueba
 app.get('/', ( req: Request, res: Response ) => {
@@ -40,3 +43,5 @@ app.get('/ping', (req: Request, res: Response) => {
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`)
 });
+
+app.use(errorHandler);

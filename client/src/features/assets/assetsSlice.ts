@@ -1,6 +1,6 @@
-import { createAsyncThunk, createEntityAdapter, createSlice, type EntityState } from "@reduxjs/toolkit";
-import axios from "axios";
+import { createEntityAdapter, createSelector, type EntityState } from "@reduxjs/toolkit";
 import type { RootState } from "../../app/store";
+import { apiSlice } from "../api/apiSlice";
 
 export type Asset = {
     id: number;
@@ -15,64 +15,57 @@ export type Asset = {
 };
 
 // 1. Dile al adaptador que manejará objetos de tipo 'Asset'
-const assetsAdapter = createEntityAdapter<Asset>();
-
-// 2. Tu interfaz debe extender EntityState para incluir 'ids' y 'entities' automáticamente
-interface AssetsState extends EntityState<Asset, number> {
-    status: 'idle' | 'loading' | 'fulfilled' | 'error';
-    error: string | null;
-};
-
-const initialState: AssetsState = assetsAdapter.getInitialState({
-    status: 'idle',
-    error: null,
+const assetsAdapter = createEntityAdapter<Asset>({
+    sortComparer: (a, b) => String(b.created_at).localeCompare(String(a.created_at)),
 });
 
-// Acción asíncrona para traer activos
-export const fetchAssets = createAsyncThunk<Asset[], void, { rejectValue: string }>(
-    'assets/fetchAll',
-    async (_, { rejectWithValue }) => {
-        try {
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/assets`);
-            console.log(response.data.data);
-            return response.data.data; 
-        } catch (error: any) {
-            // Si el error viene de Axios, tiene un objeto response
-            const message = error.response?.data?.message || 'Error al conectar con el servidor';
-            
-            // Usamos rejectWithValue para que el mensaje llegue al "rejected" del slice
-            return rejectWithValue(message);
-        }
-    }
+const initialState = assetsAdapter.getInitialState();
+
+const assetsSlice = apiSlice.injectEndpoints({
+    endpoints: (builder) => ({
+        getAssets: builder.query<EntityState<Asset, number>, void>({ // Tipamos el retorno
+            query: () => '/assets',
+            transformResponse: (res: { data: Asset[] }) => {
+                // Pasamos solo el array res.data al adaptador
+                return assetsAdapter.setAll(initialState, res.data);
+            },
+            providesTags: (result, error, arg) => {
+                if (result?.ids) {
+                    return [
+                        { type: 'Assets', id: 'LIST' },
+                        ...result.ids.map((id: number) => ({ type: 'Assets' as const, id }))
+                    ];
+                } else return [{ type: 'Assets', id: 'LIST' }];
+            }
+        }),
+        addAsset: builder.mutation({
+            query: (newAsset) => ({
+                url: '/assets',
+                method: 'POST',
+                body: newAsset
+            }),
+            // Invalidamos exactamente ese tipo e ID
+            invalidatesTags: (result, err, arg) => [
+                { type: 'Assets', id: 'LIST' },
+                { type: 'Assets', id: arg.id }
+            ]
+        }),
+    }),
+});
+
+export const selectAssetsResult = assetsSlice.endpoints.getAssets.select();
+export const selectAssetsData = createSelector(
+    selectAssetsResult,
+    assetsResult => assetsResult.data
 );
-
-const assetsSlice = createSlice({
-    name: 'assets', 
-    initialState,
-    reducers: {},
-    extraReducers(builder) {
-        builder
-            .addCase(fetchAssets.pending, (state) => {
-                state.status = 'loading';
-            })
-            .addCase(fetchAssets.fulfilled, (state, action) => {
-                state.status = 'fulfilled';
-                assetsAdapter.upsertMany(state, action.payload);
-            })
-            .addCase(fetchAssets.rejected, (state, action) => {
-                state.status = 'error';
-                state.error = (action.payload as string) || action.error.message || 'Error desconocido';
-            })
-    }
-});
 
 export const {
     selectAll: selectAllAssets,
     selectIds: selectAssetsIds,
     selectById: selectAssetById,
-} = assetsAdapter.getSelectors((state: RootState) => state.assets);
+} = assetsAdapter.getSelectors((state: RootState) => selectAssetsData(state) ?? initialState);
 
-export const assetsStatus = (state: RootState) => state.assets.status;
-export const assetsError = (state: RootState) => state.assets.error;
-
-export default assetsSlice.reducer;
+export const {
+    useGetAssetsQuery,
+    useAddAssetMutation,
+} = assetsSlice;
