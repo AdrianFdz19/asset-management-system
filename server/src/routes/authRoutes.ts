@@ -2,7 +2,7 @@ import { NextFunction, Request, Response, Router } from 'express'
 import { pool } from '../config/databaseConfig';
 import { OAuth2Client } from 'google-auth-library';
 import { envs } from '../config/envs';
-import jwt from 'jsonwebtoken';
+/* import jwt from 'jsonwebtoken'; */
 const client = new OAuth2Client(envs.GOOGLE_CLIENT_ID);
 
 export const auth = Router();
