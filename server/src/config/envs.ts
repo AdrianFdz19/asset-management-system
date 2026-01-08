@@ -7,8 +7,11 @@ export const envs = {
     DATABASE_URL: process.env.DATABASE_URL || '',
     JWT_SECRET: process.env.JWT_SECRET || 'default_secret',
     NODE_ENV: process.env.NODE_ENV || 'development',
-    CLIENT_URL: process.env.CLIENT_URL
+    CLIENT_URL: process.env.CLIENT_URL,
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID
 };
+
+console.log(envs.GOOGLE_CLIENT_ID);
 
 // Validación opcional (Muy pro para tu portafolio)
 if (!envs.DATABASE_URL) {

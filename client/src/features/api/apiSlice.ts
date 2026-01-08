@@ -5,5 +5,17 @@ export const apiSlice = createApi({
     reducerPath: 'api',
     tagTypes: ['Assets', "Categories"],
     baseQuery: fetchBaseQuery({ baseUrl: import.meta.env.VITE_API_URL }),
-    endpoints: () => ({}),
+    endpoints: builder => ({
+        loginWithGoogle: builder.mutation({
+            query: (token) => ({
+                url: '/auth/google',
+                method: 'POST',
+                body: { token }
+            })
+        })
+    })
 });
+
+export const {
+    useLoginWithGoogleMutation,
+} = apiSlice;

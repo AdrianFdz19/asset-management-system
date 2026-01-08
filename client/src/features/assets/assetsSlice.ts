@@ -50,6 +50,28 @@ const assetsSlice = apiSlice.injectEndpoints({
                 { type: 'Assets', id: arg.id }
             ]
         }),
+        updateAssetStatus: builder.mutation({
+            query: ({ id, status }) => ({
+                url: `/assets/${id}`, 
+                method: 'PATCH', 
+                body: { status }
+            }),
+            async onQueryStarted({ id, status }, { dispatch, queryFulfilled }) {
+                const patchResult = dispatch(
+                    assetsSlice.util.updateQueryData( 'getAssets', undefined, ( draft ) => {
+                        const asset = draft.entities[id];
+                        if (asset) {
+                            asset.status = status;
+                        }
+                    })
+                );
+                try {
+                    await queryFulfilled
+                } catch {
+                    patchResult.undo()
+                }              
+            }
+        })
     }),
 });
 
@@ -68,4 +90,5 @@ export const {
 export const {
     useGetAssetsQuery,
     useAddAssetMutation,
+    useUpdateAssetStatusMutation
 } = assetsSlice;

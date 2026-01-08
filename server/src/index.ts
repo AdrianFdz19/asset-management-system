@@ -3,6 +3,7 @@ import cors from 'cors';
 import { assets } from './routes/assetsRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import { categories } from './routes/categoriesRoutes';
+import { auth as authRoute } from './routes/authRoutes';
 
 const app: Application = express();
  
@@ -23,11 +24,20 @@ app.use(cors({
   }
 }));
 
+app.use((req, res, next) => {
+  // Esto le dice al navegador: "Confío en los popups que yo mismo abro"
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  // Opcionalmente, puedes añadir este para mayor compatibilidad con Google GSI
+  res.setHeader("Cross-Origin-Embedder-Policy", "require-corp"); 
+  next();
+});
+
 app.use(express.json());
 
 // Rutas
 app.use('/assets', assets);
 app.use('/categories', categories);
+app.use('/auth', authRoute);
 
 // Ruta de prueba
 app.get('/', ( req: Request, res: Response ) => {
