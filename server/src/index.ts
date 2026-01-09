@@ -4,6 +4,7 @@ import { assets } from './routes/assetsRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import { categories } from './routes/categoriesRoutes';
 import { auth as authRoute } from './routes/authRoutes';
+import cookieParser from 'cookie-parser';
 
 const app: Application = express();
  
@@ -21,7 +22,8 @@ app.use(cors({
     } else {
       callback(new Error('Error de CORS: Origen no permitido'));
     }
-  }
+  },
+  credentials: true
 }));
 
 app.use((req, res, next) => {
@@ -32,6 +34,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(cookieParser());
 app.use(express.json());
 
 // Rutas

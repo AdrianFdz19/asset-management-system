@@ -1,9 +1,10 @@
 import { NextFunction, Request, Response, Router } from 'express'
 import { pool } from '../config/databaseConfig';
+import { isAuth } from '../middleware/isAuth';
 
 export const assets = Router();
 
-assets.get('/', async (req: Request, res: Response, next: NextFunction) => {
+assets.get('/', isAuth, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const query = `SELECT * FROM assets`;
         const response = await pool.query(query);
@@ -19,7 +20,7 @@ assets.get('/', async (req: Request, res: Response, next: NextFunction) => {
     }
 });
 
-assets.post('/', async (req: Request, res: Response, next: NextFunction) => {
+assets.post('/', isAuth, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {
             name,
