@@ -71,7 +71,7 @@ const assetsSlice = apiSlice.injectEndpoints({
                     patchResult.undo()
                 }              
             }
-        })
+        }),
     }),
 });
 

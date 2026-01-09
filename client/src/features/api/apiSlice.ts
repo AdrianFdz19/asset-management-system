@@ -8,9 +8,17 @@ interface User {
     avatar?: string;
 }
 
+// 1. Define una interfaz para tus estadísticas (esto es lo ideal en TS)
+interface DashboardStats {
+    total_value: number;
+    asset_count: number;
+    category_count: number;
+    top_asset_name: string;
+}
+
 export const apiSlice = createApi({
     reducerPath: 'api',
-    tagTypes: ['Assets', "Categories"],
+    tagTypes: ['Assets', "Categories", "Dashboard"],
     baseQuery: fetchBaseQuery({
         baseUrl: import.meta.env.VITE_API_URL,
         credentials: 'include'
@@ -73,6 +81,10 @@ export const apiSlice = createApi({
                     console.error('Logout failed');
                 }
             }
+        }),
+        getDashboardStats: builder.query<DashboardStats, void>({ // <--- <Respuesta, Argumento>
+            query: () => `/assets/dashboard-stats`,
+            providesTags: ["Dashboard", "Categories"]
         })
     })
 });
@@ -82,5 +94,6 @@ export const {
     useCheckAuthQuery,
     useLogoutMutation,
     useSignUpMutation,
-    useSignInMutation
+    useSignInMutation,
+    useGetDashboardStatsQuery
 } = apiSlice;

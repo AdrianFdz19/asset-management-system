@@ -21,6 +21,8 @@ assets.get('/', isAuth, async (req: Request, res: Response, next: NextFunction) 
 });
 
 assets.post('/', isAuth, async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.userId;
+    console.log('El usuario con el id ', userId, 'Esta subiendo su asset.');
     try {
         const {
             name,
@@ -51,7 +53,7 @@ assets.post('/', isAuth, async (req: Request, res: Response, next: NextFunction)
             value,
             purchase_date,
             category_id,
-            user_id,
+            userId,
         ]
         const response = await pool.query(query, values);
         const data = response.rows[0];
@@ -62,6 +64,45 @@ assets.post('/', isAuth, async (req: Request, res: Response, next: NextFunction)
                 message: '',
                 data
             });
+    } catch (err) {
+        next(err);
+    }
+});
+
+assets.get('/dashboard-stats', isAuth, async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.userId;
+    try {
+        const query = `
+            SELECT
+            -- 1. Agregados básicos
+                COALESCE(SUM(value), 0) AS total_value,
+                COUNT(*) AS asset_count,
+    
+                -- 2. Conteo de categorías únicas
+                COUNT(DISTINCT category_id) AS category_count,
+    
+                 -- 3. Activo más caro (usando una subconsulta limitada a 1)
+                (
+                    SELECT name 
+                    FROM assets 
+                    WHERE user_id = $1 
+                    ORDER BY value DESC 
+                    LIMIT 1
+                ) AS top_asset_name
+            FROM 
+                assets
+            WHERE 
+                user_id = $1;
+        `;
+        const result = await pool.query(query, [userId]);
+        const stats = result.rows[0];
+        res.json({
+            total_value: parseFloat(stats.total_value),
+            asset_count: parseInt(stats.asset_count),
+            category_count: parseInt(stats.category_count),
+            top_asset_name: stats.top_asset_name || 'N/A'
+        });
+
     } catch (err) {
         next(err);
     }
