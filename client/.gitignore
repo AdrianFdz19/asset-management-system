@@ -13,6 +13,9 @@ dist-ssr
 *.local
 .env
 
+client_secret.json
+credenciales.txt 
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
