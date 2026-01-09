@@ -62,10 +62,12 @@ export const sendTokenCookie = (res: Response, userId: number) => {
         expiresIn: '24h', // El token de Google dura 1h, pero el tuyo puede durar más
     });
 
+    let sameSiteStatus = envs.NODE_ENV === 'production' ? 'none' as const : 'strict' as const
+
     const cookieOptions = {
         httpOnly: true,
         secure: envs.NODE_ENV === 'production',
-        sameSite: 'strict' as const, // 'as const' ayuda a TypeScript con los tipos
+        sameSite: sameSiteStatus,
         maxAge: 24 * 60 * 60 * 1000, // 24 horas en milisegundos
     };
 
