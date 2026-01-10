@@ -116,68 +116,40 @@ assets.get('/dashboard-stats', isAuth, async (req: Request, res: Response, next:
     }
 });
 
-export const uploadAssetImage = async (req: Request, res: Response) => {
-    try {
-        // 1. Verificación de seguridad para TypeScript
-        if (!req.file) {
-            return res.status(400).json({ message: "No se proporcionó ninguna imagen" });
-        }
-
-        // 2. Convertir el buffer a Base64 para enviarlo a Cloudinary
-        const fileBase64 = req.file.buffer.toString('base64');
-        const dataUri = `data:${req.file.mimetype};base64,${fileBase64}`;
-
-        // 3. Subir a Cloudinary con promesas (más moderno que callbacks)
-        const result = await cloudinary.uploader.upload(dataUri, {
-            folder: 'assets-manager',
-            transformation: [{ width: 500, height: 500, crop: 'limit' }] // Optimización automática
-        });
-
-        res.status(200).json({
-            success: true,
-            url: result.secure_url,
-            public_id: result.public_id
-        });
-
-    } catch (error) {
-        console.error("Cloudinary Error:", error);
-        res.status(500).json({ message: "Error al subir la imagen" });
-    }
-};
-
 assets.post('/upload', upload.single('image'), async (req: Request, res: Response) => {
     try {
-        // 1. Verificación de seguridad para TypeScript
+        // 1. Verificación de seguridad (Type Guard)
+        // Gracias al declare global, TS ya sabe que req.file existe
         if (!req.file) {
-            return res.status(400).json({ message: "No se proporcionó ninguna imagen" });
+            return res.status(400).json({ message: "No se proporcionó imagen" });
         }
 
-        // Hacemos un "cast" local para que TS reconozca req.file
-        const multerReq = req as Request & { file: Express.Multer.File };
+        // 2. Convertir el buffer a Base64
+        // req.file.buffer contiene los datos binarios en RAM
+        const fileBase64 = req.file.buffer.toString('base64');
+        
+        // CORRECCIÓN: El mimetype sale de req.file, no de la variable fileBase64
+        const dataUri = `data:${req.file.mimetype};base64,${fileBase64}`;
 
-        if (!multerReq.file) {
-            return res.status(400).json({ message: "No se proporcionó ninguna imagen" });
-        }
-
-        // 2. Convertir el buffer a Base64 para enviarlo a Cloudinary
-        const fileBase64 = multerReq.file.buffer.toString('base64');
-        const dataUri = `data:${multerReq.file.mimetype};base64,${fileBase64}`; // <-- esta es la linea 157
-
-        // 3. Subir a Cloudinary con promesas (más moderno que callbacks)
+        // 3. Subir a Cloudinary
         const result = await cloudinary.uploader.upload(dataUri, {
             folder: 'assets-manager',
-            transformation: [{ width: 500, height: 500, crop: 'limit' }] // Optimización automática
+            transformation: [{ width: 500, height: 500, crop: 'limit' }]
         });
 
+        // 4. Respuesta al Frontend
         res.status(200).json({
             success: true,
-            url: result.secure_url,
+            url: result.secure_url, // Esta es la URL que guardarás en Postgres
             public_id: result.public_id
         });
 
     } catch (error) {
         console.error("Cloudinary Error:", error);
-        res.status(500).json({ message: "Error al subir la imagen" });
+        res.status(500).json({ 
+            success: false,
+            message: "Error al subir la imagen a la nube" 
+        });
     }
 });
 
