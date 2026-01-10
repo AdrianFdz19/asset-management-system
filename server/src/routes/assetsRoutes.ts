@@ -152,9 +152,16 @@ assets.post('/upload', upload.single('image'), async (req: Request, res: Respons
             return res.status(400).json({ message: "No se proporcionó ninguna imagen" });
         }
 
+        // Hacemos un "cast" local para que TS reconozca req.file
+        const multerReq = req as Request & { file: Express.Multer.File };
+
+        if (!multerReq.file) {
+            return res.status(400).json({ message: "No se proporcionó ninguna imagen" });
+        }
+
         // 2. Convertir el buffer a Base64 para enviarlo a Cloudinary
-        const fileBase64 = req.file.buffer.toString('base64');
-        const dataUri = `data:${req.file.mimetype};base64,${fileBase64}`;
+        const fileBase64 = multerReq.file.buffer.toString('base64');
+        const dataUri = `data:${multerReq.file.mimetype};base64,${fileBase64}`; // <-- esta es la linea 157
 
         // 3. Subir a Cloudinary con promesas (más moderno que callbacks)
         const result = await cloudinary.uploader.upload(dataUri, {
