@@ -45,5 +45,30 @@ Este proyecto utiliza **Docker** para garantizar la consistencia entre entornos 
 ## 🏗 Setup & Installation
 
 1. **Clone the repository:**
-   ```bash
-   git clone [https://github.com/AdrianFdz19/asset-management-system.git](https://github.com/AdrianFdz19/asset-management-system.git)
+```bash
+git clone [https://github.com/AdrianFdz19/asset-management-system.git](https://github.com/AdrianFdz19/asset-management-system.git)
+```
+2. **Environment Variables:** Configura un archivo .env en la carpeta /server con:
+
+- DATABASE_URL
+- JWT_SECRET
+- CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+- GOOGLE_CLIENT_ID
+
+2. **Run with Docker:** 
+
+```bash
+docker build -t assetflow-server ./server
+docker run -p 10000:10000 assetflow-server
+```
+
+---
+
+## 📈 Roadmap
+- [ ] Implementación de SQL Avanzado (CTEs & Window Functions) para reportes detallados.
+- [ ] Exportación de reportes en PDF/Excel.
+- [ ] Sistema de alertas para activos con bajo stock o mantenimiento pendiente.
+
+---
+
+Desarrollado con ❤️ por Adrian
