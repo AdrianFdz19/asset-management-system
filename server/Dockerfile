@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # 4. Instalamos TODAS las dependencias (incluyendo TypeScript para el build)
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # 5. Copiamos el resto del código
 COPY . .
