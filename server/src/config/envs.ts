@@ -8,7 +8,10 @@ export const envs = {
     JWT_SECRET: process.env.JWT_SECRET || 'default_secret',
     NODE_ENV: process.env.NODE_ENV || 'development',
     CLIENT_URL: process.env.CLIENT_URL,
-    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+    CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_NAME,
+    CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+    CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET
 };
 
 console.log(envs.GOOGLE_CLIENT_ID);

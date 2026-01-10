@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAddAssetMutation } from './assetsSlice';
+import { useAddAssetMutation, useUploadImageMutation } from './assetsSlice';
 import { useAppSelector } from '../../app/hooks';
 import { selectAllCategories, useGetCategoriesQuery } from '../categories/categoriesSlice';
 
@@ -13,6 +13,15 @@ export default function AddAssetForm() {
     const [categoryId, setCategoryId] = useState('');
     const [userId, setUserId] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
+    const [file, setFile] = useState<File | null>(null);
+
+    const [uploadImage, { isLoading: isUploading }] = useUploadImageMutation();
+    const [addAsset, { isLoading }] = useAddAssetMutation();
+
+    // Función para manejar el cambio del input file
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) setFile(e.target.files[0]);
+    };
 
     // Traer la información de las categorias
     const {
@@ -24,13 +33,16 @@ export default function AddAssetForm() {
     // Validación simple para el botón
     const canSave = [name, serialNumber, value, categoryId].every(Boolean);
 
-    const [addAsset, { isLoading }] = useAddAssetMutation();
-
     const isPending = isLoading;
     const canSubmit = canSave && !isPending;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!canSubmit) return;
+
+        setErrorMsg('');
+        let image_url = null;
+        let image_public_id = null;
 
         if (canSubmit) {
             setErrorMsg('');
@@ -46,7 +58,29 @@ export default function AddAssetForm() {
             };
 
             try {
-                // LLAMADA DIRECTA (Sin dispatch)
+                // PASO 1: Si hay un archivo, subirlo primero
+                if (file) {
+                    const formData = new FormData();
+                    formData.append('image', file); // 'image' debe coincidir con upload.single('image')
+
+                    const uploadResult = await uploadImage(formData).unwrap();
+                    image_url = uploadResult.url;
+                    image_public_id = uploadResult.public_id;
+                }
+
+                // PASO 2: Crear el asset con la URL recibida
+                const newAsset = {
+                    name,
+                    serial_number: serialNumber,
+                    status,
+                    value,
+                    purchase_date: purchaseDate,
+                    category_id: Number(categoryId),
+                    user_id: userId ? Number(userId) : null,
+                    image_url,        // Enviamos la URL a Postgres
+                    image_public_id   // Enviamos el ID a Postgres
+                };
+
                 await addAsset(newAsset).unwrap();
 
                 // RESETEAR TODOS LOS VALORES
@@ -60,8 +94,7 @@ export default function AddAssetForm() {
 
                 alert("Asset added successfully!");
             } catch (err: any) {
-                const message = err.data?.message || 'Failed to save the asset';
-                setErrorMsg(message);
+                setErrorMsg(err.data?.message || 'Error processing request');
             }
         }
     };
@@ -187,7 +220,7 @@ export default function AddAssetForm() {
                             name="categories"
                             id="categories"
                             style={styles.select}
-                            value={categoryId}  
+                            value={categoryId}
                             onChange={(e) => setCategoryId(e.target.value)}
                         >
                             <option value="">Select a category</option>
@@ -209,6 +242,17 @@ export default function AddAssetForm() {
                             placeholder="Employee ID"
                         />
                     </div>
+                </div>
+
+                <div style={styles.formGroup}>
+                    <label style={styles.label}>Asset Photo</label>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        style={styles.input}
+                    />
+                    {file && <p style={{ fontSize: '12px', color: '#347d39' }}>Selected: {file.name}</p>}
                 </div>
 
                 {errorMsg && <p style={{ color: '#ff7b72', fontSize: '14px', marginTop: '10px' }}>{errorMsg}</p>}

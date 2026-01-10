@@ -12,6 +12,8 @@ export type Asset = {
     category_id: number;
     user_id: number;
     created_at: string;
+    image_url: string | null;
+    public_image_url: string | null;
 };
 
 // 1. Dile al adaptador que manejará objetos de tipo 'Asset'
@@ -52,13 +54,13 @@ const assetsSlice = apiSlice.injectEndpoints({
         }),
         updateAssetStatus: builder.mutation({
             query: ({ id, status }) => ({
-                url: `/assets/${id}`, 
-                method: 'PATCH', 
+                url: `/assets/${id}`,
+                method: 'PATCH',
                 body: { status }
             }),
             async onQueryStarted({ id, status }, { dispatch, queryFulfilled }) {
                 const patchResult = dispatch(
-                    assetsSlice.util.updateQueryData( 'getAssets', undefined, ( draft ) => {
+                    assetsSlice.util.updateQueryData('getAssets', undefined, (draft) => {
                         const asset = draft.entities[id];
                         if (asset) {
                             asset.status = status;
@@ -69,8 +71,16 @@ const assetsSlice = apiSlice.injectEndpoints({
                     await queryFulfilled
                 } catch {
                     patchResult.undo()
-                }              
+                }
             }
+        }),
+        uploadImage: builder.mutation<{ url: string; public_id: string }, FormData>({
+            query: (formData) => ({
+                url: '/assets/upload',
+                method: 'POST',
+                body: formData,
+                // RTK Query detecta automáticamente el FormData y pone el Content-Type correcto
+            }),
         }),
     }),
 });
@@ -90,5 +100,6 @@ export const {
 export const {
     useGetAssetsQuery,
     useAddAssetMutation,
-    useUpdateAssetStatusMutation
+    useUpdateAssetStatusMutation,
+    useUploadImageMutation
 } = assetsSlice;

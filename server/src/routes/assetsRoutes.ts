@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response, Router } from 'express'
 import { pool } from '../config/databaseConfig';
 import { isAuth } from '../middleware/isAuth';
+import cloudinary from '../config/cloudinary';
+import upload from '../services/multer';
 
 export const assets = Router();
 
@@ -31,7 +33,9 @@ assets.post('/', isAuth, async (req: Request, res: Response, next: NextFunction)
             value,
             purchase_date,
             category_id,
-            user_id
+            user_id,
+            image_url, // <--- Nuevo campo
+            image_public_id // <--- Nuevo campo
         } = req.body;
         const query = `
             INSERT INTO assets
@@ -42,8 +46,10 @@ assets.post('/', isAuth, async (req: Request, res: Response, next: NextFunction)
                 value,
                 purchase_date,
                 category_id,
-                user_id
-            ) VALUES ( $1, $2, $3, $4, $5, $6, $7 )
+                user_id,
+                image_url,
+                image_public_id
+            ) VALUES ( $1, $2, $3, $4, $5, $6, $7, $8, $9 )
             RETURNING *
         `;
         const values = [
@@ -54,6 +60,8 @@ assets.post('/', isAuth, async (req: Request, res: Response, next: NextFunction)
             purchase_date,
             category_id,
             userId,
+            image_url || null,
+            image_public_id || null
         ]
         const response = await pool.query(query, values);
         const data = response.rows[0];
@@ -105,6 +113,64 @@ assets.get('/dashboard-stats', isAuth, async (req: Request, res: Response, next:
 
     } catch (err) {
         next(err);
+    }
+});
+
+export const uploadAssetImage = async (req: Request, res: Response) => {
+    try {
+        // 1. Verificación de seguridad para TypeScript
+        if (!req.file) {
+            return res.status(400).json({ message: "No se proporcionó ninguna imagen" });
+        }
+
+        // 2. Convertir el buffer a Base64 para enviarlo a Cloudinary
+        const fileBase64 = req.file.buffer.toString('base64');
+        const dataUri = `data:${req.file.mimetype};base64,${fileBase64}`;
+
+        // 3. Subir a Cloudinary con promesas (más moderno que callbacks)
+        const result = await cloudinary.uploader.upload(dataUri, {
+            folder: 'assets-manager',
+            transformation: [{ width: 500, height: 500, crop: 'limit' }] // Optimización automática
+        });
+
+        res.status(200).json({
+            success: true,
+            url: result.secure_url,
+            public_id: result.public_id
+        });
+
+    } catch (error) {
+        console.error("Cloudinary Error:", error);
+        res.status(500).json({ message: "Error al subir la imagen" });
+    }
+};
+
+assets.post('/upload', upload.single('image'), async (req: Request, res: Response) => {
+    try {
+        // 1. Verificación de seguridad para TypeScript
+        if (!req.file) {
+            return res.status(400).json({ message: "No se proporcionó ninguna imagen" });
+        }
+
+        // 2. Convertir el buffer a Base64 para enviarlo a Cloudinary
+        const fileBase64 = req.file.buffer.toString('base64');
+        const dataUri = `data:${req.file.mimetype};base64,${fileBase64}`;
+
+        // 3. Subir a Cloudinary con promesas (más moderno que callbacks)
+        const result = await cloudinary.uploader.upload(dataUri, {
+            folder: 'assets-manager',
+            transformation: [{ width: 500, height: 500, crop: 'limit' }] // Optimización automática
+        });
+
+        res.status(200).json({
+            success: true,
+            url: result.secure_url,
+            public_id: result.public_id
+        });
+
+    } catch (error) {
+        console.error("Cloudinary Error:", error);
+        res.status(500).json({ message: "Error al subir la imagen" });
     }
 });
 
