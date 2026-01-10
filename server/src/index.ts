@@ -8,7 +8,7 @@ import cookieParser from 'cookie-parser';
 
 const app: Application = express();
  
-const PORT = process.env.PORT || 4000;
+const PORT: number = parseInt(process.env.PORT || '4000', 10);
 
 // Midlewares
 
@@ -53,8 +53,8 @@ app.get('/ping', (req: Request, res: Response) => {
         .json({ message: 'pong' });
 }); 
 
-app.listen(PORT, () => {
-    console.log(`Servidor corriendo en http://localhost:${PORT}`)
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
 });
 
 app.use(errorHandler);
