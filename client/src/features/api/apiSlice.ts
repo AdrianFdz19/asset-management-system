@@ -18,7 +18,7 @@ interface DashboardStats {
 
 export const apiSlice = createApi({
     reducerPath: 'api',
-    tagTypes: ['Assets', "Categories", "Dashboard"],
+    tagTypes: ['Assets', "Categories", "Dashboard", "Users"],
     baseQuery: fetchBaseQuery({
         baseUrl: import.meta.env.VITE_API_URL,
         credentials: 'include'

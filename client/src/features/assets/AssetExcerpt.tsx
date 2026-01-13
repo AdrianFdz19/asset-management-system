@@ -1,4 +1,7 @@
+import { Link } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks'
+import type { RootState } from '../../app/store';
+import { selectUserById } from '../users/usersSlice';
 import { selectAssetById } from './assetsSlice'
 
 interface AssetExcerptType {
@@ -6,71 +9,96 @@ interface AssetExcerptType {
 }
 
 export default function AssetExcerpt({ assetId }: AssetExcerptType) {
-    const asset = useAppSelector((state) => selectAssetById(state, assetId));
+    const asset = useAppSelector((state: RootState) => selectAssetById(state, assetId));
+    const user = useAppSelector((state: RootState) =>
+        asset?.user_id ? selectUserById(state, asset.user_id) : null
+    );
 
     if (!asset) return null;
 
+    // Lógica para forzar 'in-use' si hay un usuario asignado
+    const displayStatus = asset.user_id ? 'in-use' : asset.status;
+
     return (
-        <div className="flex flex-col bg-[#22272e] border border-[#444c56] rounded-xl overflow-hidden hover:border-[#539bf5] transition-colors shadow-lg">
+        <Link
+            to={`/assets/${asset.id}`}
+            className="flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-blue-400 hover:shadow-xl transition-all duration-300 group shadow-sm"
+        >
             {/* Contenedor de la Imagen */}
-            <div className="relative h-40 w-full bg-[#1c2128] flex items-center justify-center border-b border-[#444c56]">
+            <div className="relative h-48 w-full bg-gray-50 flex items-center justify-center border-b border-gray-100 overflow-hidden">
                 {asset.image_url ? (
-                    <img 
-                        src={asset.image_url} 
-                        alt={asset.name} 
-                        className="object-cover w-full h-full"
+                    <img
+                        src={asset.image_url}
+                        alt={asset.name}
+                        className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                     />
                 ) : (
-                    <div className="flex flex-col items-center text-gray-500">
-                        {/* Icono de placeholder si no hay imagen */}
-                        <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <div className="flex flex-col items-center text-gray-400">
+                        <svg className="w-10 h-10 mb-1 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        <span className="text-xs uppercase tracking-wider">No Photo</span>
+                        <span className="text-[10px] uppercase font-bold tracking-tighter">No Image</span>
                     </div>
                 )}
-                
-                {/* Badge de Precio sobre la imagen */}
-                <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-white text-xs font-bold px-2 py-1 rounded-md">
+
+                {/* Badge de Usuario Flotante (Estilo Moderno) */}
+                {user && (
+                    <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm p-1 pr-2.5 rounded-full border border-gray-200 shadow-sm">
+                        <img
+                            src={user.avatar}
+                            alt={user.name}
+                            className="w-5 h-5 rounded-full object-cover ring-1 ring-blue-100"
+                        />
+                        <span className="text-[10px] font-bold text-gray-700 truncate max-w-[80px]">
+                            {user.name.split(' ')[0]}
+                        </span>
+                    </div>
+                )}
+
+                {/* Badge de Precio */}
+                <div className="absolute top-2 right-2 bg-gray-900/80 backdrop-blur-md text-white text-[10px] font-black px-2 py-1 rounded-lg">
                     ${Number(asset.value).toLocaleString()}
                 </div>
             </div>
 
             {/* Contenido de texto */}
-            <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-[#adbac7] truncate flex-1" title={asset.name}>
+            <div className="p-4 bg-white">
+                <div className="flex justify-between items-start gap-2 mb-3">
+                    <h3 className="font-bold text-gray-900 text-sm line-clamp-1 flex-1 group-hover:text-blue-600 transition-colors">
                         {asset.name}
                     </h3>
-                    <StatusBadge status={asset.status} />
+                    <StatusBadge status={displayStatus} />
                 </div>
-                
-                <div className="space-y-1">
-                    <p className="text-xs text-gray-500 flex justify-between">
-                        <span>S/N:</span>
-                        <span className="font-mono text-[#768390]">{asset.serial_number || 'N/A'}</span>
-                    </p>
-                    <p className="text-xs text-gray-500 flex justify-between">
-                        <span>Purchased:</span>
-                        <span className="text-[#768390]">{new Date(asset.purchase_date).toLocaleDateString()}</span>
-                    </p>
+
+                <div className="space-y-2 pt-2 border-t border-gray-50">
+                    <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Serial</span>
+                        <span className="text-[11px] font-mono text-gray-600 bg-gray-50 px-1.5 py-0.5 rounded">
+                            {asset.serial_number || 'N/A'}
+                        </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Added</span>
+                        <span className="text-[11px] text-gray-500 font-medium">
+                            {new Date(asset.purchase_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                    </div>
                 </div>
             </div>
-        </div>
+        </Link>
     )
 }
 
-// Sub-componente para limpiar el código principal
 function StatusBadge({ status }: { status: string }) {
     const colors: Record<string, string> = {
-        available: 'bg-green-500/10 text-green-500 border-green-500/20',
-        'in-use': 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-        maintenance: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
-        retired: 'bg-red-500/10 text-red-500 border-red-500/20',
+        available: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+        'in-use': 'bg-blue-50 text-blue-600 border-blue-100',
+        maintenance: 'bg-amber-50 text-amber-600 border-amber-100',
+        retired: 'bg-rose-50 text-rose-600 border-rose-100',
     };
 
     return (
-        <span className={`text-[10px] uppercase tracking-tighter font-bold px-2 py-0.5 rounded border ${colors[status] || 'bg-gray-500/10 text-gray-500 border-gray-500/20'}`}>
+        <span className={`text-[9px] uppercase font-black px-2 py-0.5 rounded-full border shadow-sm shrink-0 ${colors[status] || 'bg-gray-50 text-gray-500 border-gray-200'}`}>
             {status.replace('-', ' ')}
         </span>
     );

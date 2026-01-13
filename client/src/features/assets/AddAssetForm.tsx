@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAddAssetMutation, useUploadImageMutation } from './assetsSlice';
 import { useAppSelector } from '../../app/hooks';
 import { selectAllCategories, useGetCategoriesQuery } from '../categories/categoriesSlice';
+import { selectAllUsers, useGetUsersQuery } from '../users/usersSlice';
 
 export default function AddAssetForm() {
     // 1. Estados iniciales (Mantenemos los tipos de tu objeto Asset)
@@ -14,6 +15,9 @@ export default function AddAssetForm() {
     const [userId, setUserId] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
     const [file, setFile] = useState<File | null>(null);
+
+    const { isSuccess: isUsersSuccess, isError: isUsersError, isLoading: isUsersLoading } = useGetUsersQuery();
+    const usersList = useAppSelector(selectAllUsers);
 
     const [uploadImage, { isLoading: isUploading }] = useUploadImageMutation();
     const [addAsset, { isLoading }] = useAddAssetMutation();
@@ -46,16 +50,6 @@ export default function AddAssetForm() {
 
         if (canSubmit) {
             setErrorMsg('');
-            const newAsset = {
-                // id: Number(nanoid()), // Nota: Si usas Postgres, mejor deja que el DB genere el ID
-                name,
-                serial_number: serialNumber,
-                status,
-                value,
-                purchase_date: purchaseDate,
-                category_id: Number(categoryId),
-                user_id: userId ? Number(userId) : null
-            };
 
             try {
                 // PASO 1: Si hay un archivo, subirlo primero
@@ -150,37 +144,45 @@ export default function AddAssetForm() {
     };
 
     return (
-        <section style={styles.container}>
-            <h2 style={{ color: '#539bf5', textAlign: 'center', marginBottom: '20px' }}>Register New Asset</h2>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column' }}>
+        <section className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span className="w-2 h-6 bg-blue-600 rounded-full"></span>
+                Register New Asset
+            </h2>
 
-                <div style={styles.formGroup}>
-                    <label style={styles.label}>Asset Name</label>
-                    <input
-                        style={styles.input}
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="e.g. MacBook Pro 14'"
-                    />
+            <form onSubmit={handleSubmit} className="space-y-6">
+
+                {/* Fila 1: Nombre y Serial */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex flex-col gap-2">
+                        <label className="text-xs font-black uppercase tracking-widest text-gray-400">Asset Name</label>
+                        <input
+                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-gray-700 placeholder:text-gray-400"
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="e.g. MacBook Pro 14'"
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                        <label className="text-xs font-black uppercase tracking-widest text-gray-400">Serial Number</label>
+                        <input
+                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-mono text-sm text-gray-700"
+                            type="text"
+                            value={serialNumber}
+                            onChange={(e) => setSerialNumber(e.target.value)}
+                            placeholder="SN-12345ABC"
+                        />
+                    </div>
                 </div>
 
-                <div style={styles.formGroup}>
-                    <label style={styles.label}>Serial Number</label>
-                    <input
-                        style={styles.input}
-                        type="text"
-                        value={serialNumber}
-                        onChange={(e) => setSerialNumber(e.target.value)}
-                        placeholder="SN-12345ABC"
-                    />
-                </div>
-
-                <div style={{ display: 'flex', gap: '15px' }}>
-                    <div style={{ ...styles.formGroup, flex: 1 }}>
-                        <label style={styles.label}>Status</label>
+                {/* Fila 2: Status, Value y Date */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="flex flex-col gap-2">
+                        <label className="text-xs font-black uppercase tracking-widest text-gray-400">Status</label>
                         <select
-                            style={styles.select}
+                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-gray-700 appearance-none cursor-pointer"
                             value={status}
                             onChange={(e) => setStatus(e.target.value)}
                         >
@@ -191,78 +193,87 @@ export default function AddAssetForm() {
                         </select>
                     </div>
 
-                    <div style={{ ...styles.formGroup, flex: 1 }}>
-                        <label style={styles.label}>Value (USD)</label>
+                    <div className="flex flex-col gap-2">
+                        <label className="text-xs font-black uppercase tracking-widest text-gray-400">Value (USD)</label>
+                        <div className="relative">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
+                            <input
+                                className="w-full pl-8 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-gray-700"
+                                type="number"
+                                value={value}
+                                onChange={(e) => setValue(e.target.value)}
+                                placeholder="0.00"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                        <label className="text-xs font-black uppercase tracking-widest text-gray-400">Purchase Date</label>
                         <input
-                            style={styles.input}
-                            type="number"
-                            value={value}
-                            onChange={(e) => setValue(e.target.value)}
-                            placeholder="1200.50"
+                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-gray-700"
+                            type="date"
+                            value={purchaseDate}
+                            onChange={(e) => setPurchaseDate(e.target.value)}
                         />
                     </div>
                 </div>
 
-                <div style={styles.formGroup}>
-                    <label style={styles.label}>Purchase Date</label>
-                    <input
-                        style={styles.input}
-                        type="date"
-                        value={purchaseDate}
-                        onChange={(e) => setPurchaseDate(e.target.value)}
-                    />
-                </div>
-
-                <div style={{ display: 'flex', gap: '15px' }}>
-                    <div style={{ ...styles.formGroup, flex: 1 }}>
-                        <label style={styles.label}>Category</label>
+                {/* Fila 3: Category y User */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex flex-col gap-2">
+                        <label className="text-xs font-black uppercase tracking-widest text-gray-400">Category</label>
                         <select
-                            name="categories"
-                            id="categories"
-                            style={styles.select}
+                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-gray-700 cursor-pointer"
                             value={categoryId}
                             onChange={(e) => setCategoryId(e.target.value)}
                         >
                             <option value="">Select a category</option>
-                            {categories.map(cat => (
-                                <option key={cat.id} value={cat.id}>
-                                    {cat.name}
-                                </option>
-                            ))}
+                            {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                         </select>
                     </div>
 
-                    <div style={{ ...styles.formGroup, flex: 1 }}>
-                        <label style={styles.label}>User ID (Optional)</label>
-                        <input
-                            style={styles.input}
-                            type="number"
+                    <div className="flex flex-col gap-2">
+                        <label className="text-xs font-black uppercase tracking-widest text-gray-400">Assign User (Optional)</label>
+                        <select
+                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-gray-700 cursor-pointer"
                             value={userId}
                             onChange={(e) => setUserId(e.target.value)}
-                            placeholder="Employee ID"
-                        />
+                        >
+                            <option value="">None / In Storage</option>
+                            {usersList.map(user => <option key={user.id} value={user.id}>{user.name}</option>)}
+                        </select>
                     </div>
                 </div>
 
-                <div style={styles.formGroup}>
-                    <label style={styles.label}>Asset Photo</label>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        style={styles.input}
-                    />
-                    {file && <p style={{ fontSize: '12px', color: '#347d39' }}>Selected: {file.name}</p>}
+                {/* Foto y Errores */}
+                <div className="flex flex-col gap-2">
+                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Asset Photo</label>
+                    <div className="relative group">
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:uppercase file:tracking-widest file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 cursor-pointer"
+                        />
+                    </div>
+                    {file && <p className="text-[11px] text-emerald-600 font-bold bg-emerald-50 w-fit px-2 py-0.5 rounded">✓ {file.name}</p>}
                 </div>
 
-                {errorMsg && <p style={{ color: '#ff7b72', fontSize: '14px', marginTop: '10px' }}>{errorMsg}</p>}
+                {errorMsg && (
+                    <div className="p-3 bg-red-50 border border-red-100 rounded-xl">
+                        <p className="text-xs text-red-600 font-bold">Error: {errorMsg}</p>
+                    </div>
+                )}
 
                 <button
                     type="submit"
                     disabled={!canSubmit}
-                    style={styles.button}
+                    className={`w-full py-4 rounded-xl font-bold text-sm uppercase tracking-[0.2em] transition-all shadow-md 
+                        ${canSubmit
+                            ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200'
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'}`}
                 >
-                    Save Asset to Inventory
+                    {isLoading ? 'Processing...' : 'Save Asset to Inventory'}
                 </button>
             </form>
         </section>

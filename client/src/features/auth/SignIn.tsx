@@ -29,41 +29,74 @@ export default function SignIn() {
     };
 
     return (
-        <section style={{ maxWidth: '450px', margin: '3rem auto', textAlign: 'center', padding: '2rem', border: '1px solid #ddd', borderRadius: '12px' }}>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
 
-            <h2>{isLogin ? 'Bienvenido de nuevo' : 'Crea tu cuenta'}</h2>
+            <section className="max-w-[450px] w-full bg-white border border-gray-200 rounded-3xl p-10 shadow-xl shadow-blue-900/5">
 
-            {/* Renderizado condicional del formulario */}
-            {isLogin ? <SignInForm /> : <SignUpForm />}
+                {/* Logo o Icono en el Auth */}
+                <div className="flex justify-center mb-6">
+                    <div className="bg-blue-600 p-3 rounded-2xl shadow-lg shadow-blue-200">
+                        <span className="text-3xl">📦</span>
+                    </div>
+                </div>
 
-            <div style={{ margin: '1.5rem 0', display: 'flex', alignItems: 'center' }}>
-                <hr style={{ flex: 1 }} /> <span style={{ padding: '0 10px', color: '#888' }}>o</span> <hr style={{ flex: 1 }} />
-            </div>
+                <header className="text-center mb-8">
+                    <h2 className="text-2xl font-black text-gray-900 tracking-tight">
+                        {isLogin ? 'Bienvenido de nuevo' : 'Crea tu cuenta'}
+                    </h2>
+                    <p className="text-sm text-gray-500 mt-2">
+                        {isLogin
+                            ? 'Ingresa tus credenciales para acceder al panel'
+                            : 'Únete a AssetFlow y gestiona tus recursos'
+                        }
+                    </p>
+                </header>
 
-            {/* Google Login siempre visible o condicional */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
-                {isLoading ? (
-                    <p>Autenticando...</p>
-                ) : (
-                    <GoogleLogin
-                        onSuccess={handleGoogleSuccess}
-                        onError={() => console.log('Login Failed')}
-                        theme="filled_black"
-                        shape="pill"
-                    />
-                )}
-            </div>
+                {/* Renderizado condicional del formulario */}
+                <div className="space-y-4">
+                    {isLogin ? <SignInForm /> : <SignUpForm />}
+                </div>
 
-            {/* Switch para cambiar de formulario */}
-            <p style={{ marginTop: '1rem' }}>
-                {isLogin ? "¿No tienes cuenta? " : "¿Ya tienes una cuenta? "}
-                <button
-                    onClick={() => setIsLogin(!isLogin)}
-                    style={{ background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', fontWeight: 'bold', textDecoration: 'underline' }}
-                >
-                    {isLogin ? 'Regístrate aquí' : 'Inicia sesión'}
-                </button>
-            </p>
-        </section>
+                {/* Separador elegante */}
+                <div className="my-8 flex items-center gap-4">
+                    <hr className="flex-1 border-gray-100" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">o continuar con</span>
+                    <hr className="flex-1 border-gray-100" />
+                </div>
+
+                {/* Google Login Container */}
+                <div className="flex justify-center mb-8">
+                    {isLoading ? (
+                        <div className="flex items-center gap-2 text-sm text-blue-600 font-bold animate-pulse">
+                            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                            Autenticando...
+                        </div>
+                    ) : (
+                        <div className="w-full flex justify-center transform scale-110">
+                            <GoogleLogin
+                                onSuccess={handleGoogleSuccess}
+                                onError={() => console.log('Login Failed')}
+                                theme="outline" // "outline" suele verse más limpio en fondos blancos
+                                shape="pill"
+                            />
+                        </div>
+                    )}
+                </div>
+
+                {/* Switch para cambiar de formulario (Footer del Card) */}
+                <footer className="text-center pt-6 border-t border-gray-50">
+                    <p className="text-sm text-gray-600">
+                        {isLogin ? "¿No tienes cuenta? " : "¿Ya tienes una cuenta? "}
+                        <button
+                            onClick={() => setIsLogin(!isLogin)}
+                            className="text-blue-600 font-bold hover:underline underline-offset-4 transition-all"
+                        >
+                            {isLogin ? 'Regístrate aquí' : 'Inicia sesión'}
+                        </button>
+                    </p>
+                </footer>
+
+            </section>
+        </div>
     );
 }

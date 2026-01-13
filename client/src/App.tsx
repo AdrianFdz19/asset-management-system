@@ -5,6 +5,7 @@ import SignIn from './features/auth/SignIn';
 import ProtectedRoute from './features/auth/ProtectedRoute';
 import LayoutWithHeader from './layouts/LayoutWithHeader';
 import Dashboard from './views/Dashboard';
+import AssetDetail from './features/assets/AssetDetail';
 
 function App() {
 
@@ -20,6 +21,7 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<LayoutWithHeader />} >
               <Route path='/assets' element={<AssetsList />} />
+              <Route path='/assets/:assetId' element={<AssetDetail />} />
               <Route path='/' element={<h1>Dashboard Principal</h1>} />
               <Route path='/dashboard' element={<Dashboard />} ></Route>
             </Route>

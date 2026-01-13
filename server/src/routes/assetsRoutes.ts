@@ -8,7 +8,9 @@ export const assets = Router();
 
 assets.get('/', isAuth, async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const query = `SELECT * FROM assets`;
+        const query = `
+            SELECT * FROM assets
+        `;
         const response = await pool.query(query);
         const data = response.rows;
 
@@ -23,8 +25,6 @@ assets.get('/', isAuth, async (req: Request, res: Response, next: NextFunction) 
 });
 
 assets.post('/', isAuth, async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.userId;
-    console.log('El usuario con el id ', userId, 'Esta subiendo su asset.');
     try {
         const {
             name,
@@ -59,7 +59,7 @@ assets.post('/', isAuth, async (req: Request, res: Response, next: NextFunction)
             value,
             purchase_date,
             category_id,
-            userId,
+            user_id,
             image_url || null,
             image_public_id || null
         ]

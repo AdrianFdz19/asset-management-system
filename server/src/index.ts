@@ -5,6 +5,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { categories } from './routes/categoriesRoutes';
 import { auth as authRoute } from './routes/authRoutes';
 import cookieParser from 'cookie-parser';
+import { users } from './routes/usersRoutes';
 
 const app: Application = express();
  
@@ -41,6 +42,7 @@ app.use(express.json());
 app.use('/assets', assets);
 app.use('/categories', categories);
 app.use('/auth', authRoute);
+app.use('/users', users);
 
 // Ruta de prueba
 app.get('/', ( req: Request, res: Response ) => {
