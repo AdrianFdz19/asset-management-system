@@ -1,131 +1,128 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, User, Mail, Lock } from 'lucide-react'; // Usando lucide-react para los iconos
+import { Eye, EyeOff, User, Lock, Loader2 } from 'lucide-react';
 import { useSignInMutation } from '../api/apiSlice';
 import { useNavigate } from 'react-router-dom';
 
 const SignInForm = () => {
     const navigate = useNavigate();
-    // 1. Un solo estado para todo el formulario
     const [formData, setFormData] = useState({
         username: '',
         password: ''
     });
 
-    // 2. Estado para la visibilidad de la contraseña
     const [showPassword, setShowPassword] = useState(false);
     const [serverError, setServerError] = useState<string | null>(null);
 
-    // 3. Manejador de cambios genérico
+    const [signIn, { isLoading }] = useSignInMutation();
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value
-        }));
+        setFormData((prev) => ({ ...prev, [name]: value }));
+        if (serverError) setServerError(null); // Limpiar error al escribir
     };
-
-    const [signIn, { isLoading }] = useSignInMutation();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Enviando a la API:', formData);
-        // Aquí llamarás a tu mutation de Redux o fetch
         try {
             await signIn(formData).unwrap();
-
             navigate('/assets');
         } catch (err: any) {
-            // RTK Query pone el error del servidor en err.data.message
             setServerError(err.data?.message || 'Ocurrió un error inesperado');
         }
     };
 
     return (
-        <div className="form-container" style={{ maxWidth: '400px', margin: '2rem auto' }}>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-
-                {/* Campo Nombre */}
-                <div className="input-group">
-                    <label htmlFor="name">Nombre o Email</label>
-                    <div style={{ position: 'relative' }}>
-                        <User size={18} style={iconStyle} />
-                        <input
-                            type="text"
-                            id="username"
-                            name="username"
-                            placeholder="Ej. juanperez@mail.com"
-                            value={formData.username}
-                            onChange={handleChange}
-                            required
-                            style={inputStyle}
-                        />
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5 w-full">
+            
+            {/* Campo Usuario / Email */}
+            <div className="flex flex-col gap-1.5 text-left">
+                <label 
+                    htmlFor="username" 
+                    className="text-[11px] font-black uppercase tracking-widest text-gray-400 ml-1"
+                >
+                    Nombre de usuario o Email
+                </label>
+                <div className="relative group">
+                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors">
+                        <User size={18} />
                     </div>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        placeholder="Ej. juanperez@mail.com"
+                        value={formData.username}
+                        onChange={handleChange}
+                        required
+                        disabled={isLoading}
+                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all text-sm text-gray-700 placeholder:text-gray-400"
+                    />
                 </div>
+            </div>
 
-                {/* Campo Password */}
-                <div className="input-group">
-                    <label htmlFor="password">Contraseña</label>
-                    <div style={{ position: 'relative' }}>
-                        <Lock size={18} style={iconStyle} />
-                        <input
-                            type={showPassword ? 'text' : 'password'}
-                            id="password"
-                            name="password"
-                            placeholder="••••••••"
-                            value={formData.password}
-                            onChange={handleChange}
-                            required
-                            style={inputStyle}
-                        />
-                        {/* Botón para mostrar/ocultar contraseña */}
-                        <button
-                            type="button"
-                            disabled={isLoading}
-                            onClick={() => setShowPassword(!showPassword)}
-                            style={eyeButtonStyle}
-                        >
-                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                        </button>
+            {/* Campo Password */}
+            <div className="flex flex-col gap-1.5 text-left">
+                <label 
+                    htmlFor="password" 
+                    className="text-[11px] font-black uppercase tracking-widest text-gray-400 ml-1"
+                >
+                    Contraseña
+                </label>
+                <div className="relative group">
+                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors">
+                        <Lock size={18} />
                     </div>
+                    <input
+                        type={showPassword ? 'text' : 'password'}
+                        id="password"
+                        name="password"
+                        placeholder="••••••••"
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                        disabled={isLoading}
+                        className="w-full pl-11 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all text-sm text-gray-700 placeholder:text-gray-400 font-mono"
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all"
+                        disabled={isLoading}
+                    >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
                 </div>
-                {serverError && <p style={{ color: 'red', fontSize: '0.9rem' }}>{serverError}</p>}
-                <button type="submit" className="submit-btn">
-                    Iniciar sesión
-                </button>
-            </form>
-        </div>
+            </div>
+
+            {/* Manejo de Errores */}
+            {serverError && (
+                <div className="bg-red-50 border border-red-100 p-3 rounded-xl">
+                    <p className="text-xs text-red-600 font-bold text-center">
+                        ⚠️ {serverError}
+                    </p>
+                </div>
+            )}
+
+            {/* Botón de envío */}
+            <button 
+                type="submit" 
+                disabled={isLoading}
+                className={`w-full py-3.5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-lg flex items-center justify-center gap-2
+                    ${isLoading 
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none' 
+                        : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200 hover:-translate-y-0.5'}`}
+            >
+                {isLoading ? (
+                    <>
+                        <Loader2 size={16} className="animate-spin" />
+                        Iniciando sesión...
+                    </>
+                ) : (
+                    'Iniciar sesión'
+                )}
+            </button>
+        </form>
     );
-};
-
-// Estilos rápidos en línea (puedes pasarlos a CSS)
-const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '10px 10px 10px 40px',
-    borderRadius: '8px',
-    border: '1px solid #ccc',
-    fontSize: '1rem',
-    boxSizing: 'border-box'
-};
-
-const iconStyle: React.CSSProperties = {
-    position: 'absolute',
-    left: '12px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    color: '#666'
-};
-
-const eyeButtonStyle: React.CSSProperties = {
-    position: 'absolute',
-    right: '10px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    color: '#666',
-    display: 'flex',
-    alignItems: 'center'
 };
 
 export default SignInForm;

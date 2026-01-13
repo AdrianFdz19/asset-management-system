@@ -77,6 +77,106 @@ assets.post('/', isAuth, async (req: Request, res: Response, next: NextFunction)
     }
 });
 
+// Usamos /:id para que sea una ruta RESTful clara
+assets.put('/:id', isAuth, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params; // El ID viene de la URL
+        const {
+            name,
+            serial_number,
+            status,
+            value,
+            purchase_date,
+            category_id,
+            user_id,
+            image_url,
+            image_public_id
+        } = req.body;
+
+        const query = `
+            UPDATE assets
+            SET 
+                name = $1, 
+                serial_number = $2,
+                status = $3,
+                value = $4,
+                purchase_date = $5,
+                category_id = $6,
+                user_id = $7,
+                image_url = $8,
+                image_public_id = $9
+            WHERE id = $10
+            RETURNING *;
+        `;
+
+        const values = [
+            name,
+            serial_number,
+            status,
+            value,
+            purchase_date,
+            category_id,
+            user_id || null, // Permitir que sea null si no hay usuario asignado
+            image_url || null,
+            image_public_id || null,
+            id // El décimo valor para el WHERE
+        ];
+
+        const response = await pool.query(query, values);
+
+        if (response.rowCount === 0) {
+            return res.status(404).json({ message: 'Asset no encontrado' });
+        }
+
+        const data = response.rows[0];
+
+        res.status(200).json({
+            message: 'Asset actualizado correctamente',
+            data
+        });
+    } catch (err) {
+        next(err);
+    }
+});
+
+assets.delete('/:id', isAuth, async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+
+    try {
+        // 1. Primero buscamos el asset para obtener el image_public_id
+        const findQuery = `SELECT image_public_id FROM assets WHERE id = $1`;
+        const findResult = await pool.query(findQuery, [id]);
+
+        if (findResult.rowCount === 0) {
+            return res.status(404).json({ message: 'Asset not found.' });
+        }
+
+        const publicId = findResult.rows[0].image_public_id;
+
+        // 2. Borramos el registro de la base de datos
+        const deleteQuery = `DELETE FROM assets WHERE id = $1`;
+        await pool.query(deleteQuery, [id]);
+
+        // 3. Si tiene una imagen en Cloudinary, la borramos
+        // Hacemos esto DESPUÉS de borrar de la DB para asegurar que si falla la DB, no perdamos la imagen
+        if (publicId) {
+            try {
+                await cloudinary.uploader.destroy(publicId);
+            } catch (cloudErr) {
+                // Logueamos el error pero no bloqueamos la respuesta al usuario
+                console.error("Cloudinary Delete Error:", cloudErr);
+            }
+        }
+
+        res.status(200).json({ 
+            message: 'Asset and associated media deleted successfully.' 
+        });
+
+    } catch (err) {
+        next(err);
+    }
+});
+
 assets.get('/dashboard-stats', isAuth, async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.userId;
     try {
@@ -127,7 +227,7 @@ assets.post('/upload', upload.single('image'), async (req: Request, res: Respons
         // 2. Convertir el buffer a Base64
         // req.file.buffer contiene los datos binarios en RAM
         const fileBase64 = req.file.buffer.toString('base64');
-        
+
         // CORRECCIÓN: El mimetype sale de req.file, no de la variable fileBase64
         const dataUri = `data:${req.file.mimetype};base64,${fileBase64}`;
 
@@ -146,9 +246,9 @@ assets.post('/upload', upload.single('image'), async (req: Request, res: Respons
 
     } catch (error) {
         console.error("Cloudinary Error:", error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            message: "Error al subir la imagen a la nube" 
+            message: "Error al subir la imagen a la nube"
         });
     }
 });

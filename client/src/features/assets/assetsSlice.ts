@@ -13,7 +13,7 @@ export type Asset = {
     user_id: number;
     created_at: string;
     image_url: string | null;
-    public_image_url: string | null;
+    image_public_id: string | null;
 };
 
 // 1. Dile al adaptador que manejará objetos de tipo 'Asset'
@@ -52,6 +52,19 @@ const assetsSlice = apiSlice.injectEndpoints({
                 { type: 'Assets', id: arg.id }
             ]
         }),
+        updateAsset: builder.mutation({
+            query: (asset) => ({
+                url: `/assets/${asset.id}`, 
+                method: 'PUT', 
+                body: asset
+            }), 
+            invalidatesTags: (result, err, arg) => {
+                return [
+                    { type: 'Assets', id: 'List' }, 
+                    { type: 'Assets', id: arg.id }
+                ]
+            }
+        }),
         updateAssetStatus: builder.mutation({
             query: ({ id, status }) => ({
                 url: `/assets/${id}`,
@@ -72,6 +85,18 @@ const assetsSlice = apiSlice.injectEndpoints({
                 } catch {
                     patchResult.undo()
                 }
+            }
+        }),
+        deleteAsset: builder.mutation({
+            query: ({ id }) => ({
+                url: `/assets/${id}`, 
+                method: 'DELETE'
+            }),
+            invalidatesTags: (res, err, arg) => {
+                return [
+                    { type: 'Assets', id: 'List' },
+                    { type: 'Assets', id: arg.id }
+                ]
             }
         }),
         uploadImage: builder.mutation<{ url: string; public_id: string }, FormData>({
@@ -100,6 +125,8 @@ export const {
 export const {
     useGetAssetsQuery,
     useAddAssetMutation,
+    useUpdateAssetMutation,
+    useDeleteAssetMutation,
     useUpdateAssetStatusMutation,
     useUploadImageMutation
 } = assetsSlice;

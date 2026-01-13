@@ -2,11 +2,12 @@ import React from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAppSelector } from '../../app/hooks';
 import { selectAssetById, useGetAssetsQuery } from './assetsSlice';
-import { selectUserById } from '../users/usersSlice';
+import { selectUserById, useGetUsersQuery } from '../users/usersSlice';
 import type { RootState } from '../../app/store';
 
 export default function AssetDetail() {
     const { isLoading } = useGetAssetsQuery();
+    const { isLoading: isUsersLoading } = useGetUsersQuery();
     const { assetId } = useParams();
     const navigate = useNavigate();
     
@@ -42,11 +43,10 @@ export default function AssetDetail() {
                 </div>
                 
                 <div className="flex gap-3">
-                    <button className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all shadow-sm">
+                    <button
+                        onClick={() => navigate(`/assets/edit/${asset.id}`)}    
+                     className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all shadow-sm">
                         Edit Asset
-                    </button>
-                    <button className="px-5 py-2.5 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-all shadow-md shadow-red-200">
-                        Delete
                     </button>
                 </div>
             </div>
