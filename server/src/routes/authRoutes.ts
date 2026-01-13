@@ -232,10 +232,19 @@ auth.post('/google', async (req: Request, res: Response, next: NextFunction) => 
 
 // Logout
 auth.post('/logout', isAuth, (req: Request, res: Response) => {
-    res.clearCookie('session_token', {
+    // Es buena práctica usar las mismas opciones que en el login
+    const cookieOptions = {
         httpOnly: true,
-        secure: envs.NODE_ENV === 'production',
-        sameSite: 'strict',
-    });
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' as const : 'strict' as const,
+        path: '/',
+        // domain: 'tudominio.com' // Descomenta si usas un dominio específico
+    };
+
+    res.clearCookie('session_token', cookieOptions);
+    
+    // Opcional: Forzar la expiración manualmente por si clearCookie falla
+    /* res.cookie('session_token', '', { ...cookieOptions, expires: new Date(0) }); */
+
     res.status(200).json({ message: 'Logged out successfully' });
 });
