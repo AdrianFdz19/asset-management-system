@@ -2,14 +2,14 @@ import { Link } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks'
 import type { RootState } from '../../app/store';
 import { selectUserById } from '../users/usersSlice';
-import { selectAssetById } from './assetsSlice'
+import type { Asset } from './assetsSlice' // Importamos el tipo
 
 interface AssetExcerptType {
-    assetId: number;
+    asset: Asset; // Ahora recibimos el objeto completo
 }
 
-export default function AssetExcerpt({ assetId }: AssetExcerptType) {
-    const asset = useAppSelector((state: RootState) => selectAssetById(state, assetId));
+export default function AssetExcerpt({ asset }: AssetExcerptType) {
+    // Ya no necesitamos selectAssetById aquí porque el padre ya nos dio el asset
     const user = useAppSelector((state: RootState) =>
         asset?.user_id ? selectUserById(state, asset.user_id) : null
     );
@@ -22,7 +22,7 @@ export default function AssetExcerpt({ assetId }: AssetExcerptType) {
     return (
         <Link
             to={`/assets/${asset.id}`}
-            className="flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-blue-400 hover:shadow-xl transition-all duration-300 group shadow-sm"
+            className="flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-blue-400 hover:shadow-xl transition-all duration-300 group shadow-sm h-full"
         >
             {/* Contenedor de la Imagen */}
             <div className="relative h-48 w-full bg-gray-50 flex items-center justify-center border-b border-gray-100 overflow-hidden">
@@ -41,7 +41,7 @@ export default function AssetExcerpt({ assetId }: AssetExcerptType) {
                     </div>
                 )}
 
-                {/* Badge de Usuario Flotante (Estilo Moderno) */}
+                {/* Badge de Usuario Flotante */}
                 {user && (
                     <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm p-1 pr-2.5 rounded-full border border-gray-200 shadow-sm">
                         <img
@@ -62,7 +62,7 @@ export default function AssetExcerpt({ assetId }: AssetExcerptType) {
             </div>
 
             {/* Contenido de texto */}
-            <div className="p-4 bg-white">
+            <div className="p-4 flex flex-col flex-1">
                 <div className="flex justify-between items-start gap-2 mb-3">
                     <h3 className="font-bold text-gray-900 text-sm line-clamp-1 flex-1 group-hover:text-blue-600 transition-colors">
                         {asset.name}
@@ -70,7 +70,7 @@ export default function AssetExcerpt({ assetId }: AssetExcerptType) {
                     <StatusBadge status={displayStatus} />
                 </div>
 
-                <div className="space-y-2 pt-2 border-t border-gray-50">
+                <div className="space-y-2 pt-2 border-t border-gray-50 mt-auto">
                     <div className="flex justify-between items-center">
                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Serial</span>
                         <span className="text-[11px] font-mono text-gray-600 bg-gray-50 px-1.5 py-0.5 rounded">
@@ -78,7 +78,7 @@ export default function AssetExcerpt({ assetId }: AssetExcerptType) {
                         </span>
                     </div>
                     <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Added</span>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Purchased</span>
                         <span className="text-[11px] text-gray-500 font-medium">
                             {new Date(asset.purchase_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                         </span>
@@ -95,6 +95,7 @@ function StatusBadge({ status }: { status: string }) {
         'in-use': 'bg-blue-50 text-blue-600 border-blue-100',
         maintenance: 'bg-amber-50 text-amber-600 border-amber-100',
         retired: 'bg-rose-50 text-rose-600 border-rose-100',
+        inuse: 'bg-blue-50 text-blue-600 border-blue-100', // Agregamos por si viene sin guión
     };
 
     return (

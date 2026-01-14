@@ -6,7 +6,7 @@ import upload from '../services/multer';
 
 export const assets = Router();
 
-assets.get('/', isAuth, async (req: Request, res: Response, next: NextFunction) => {
+/* assets.get('/', isAuth, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const query = `
             SELECT * FROM assets
@@ -19,6 +19,68 @@ assets.get('/', isAuth, async (req: Request, res: Response, next: NextFunction) 
                 message: '',
                 data
             });
+    } catch (err) {
+        next(err);
+    }
+}); */
+
+assets.get('/', isAuth, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { search, categoryId, status, page = 1, limit = 10 } = req.query;
+        
+        // 1. Calculamos offset
+        const currentPage = Math.max(1, Number(page));
+        const currentLimit = Math.max(1, Number(limit));
+        const offset = (currentPage - 1) * currentLimit;
+
+        // Base de la query y valores
+        let whereClause = ` WHERE 1=1`;
+        const values: any[] = [];
+
+        // --- FILTROS (Mantenemos tu lógica sólida) ---
+        if (search && typeof search === 'string' && search.trim() !== '') {
+            values.push(`%${search.trim()}%`);
+            whereClause += ` AND (name ILIKE $${values.length} OR serial_number ILIKE $${values.length})`;
+        }
+
+        if (categoryId && categoryId !== '' && categoryId !== 'undefined') {
+            values.push(categoryId);
+            whereClause += ` AND category_id = $${values.length}`;
+        }
+
+        if (status && status !== 'all' && status !== '' && status !== 'undefined') {
+            values.push(status);
+            whereClause += ` AND status = $${values.length}`;
+        }
+
+        // --- 2. CONSULTA DE TOTAL (COUNT) ---
+        // Clonamos la lógica de filtros para saber el total real antes de paginar
+        const countQuery = `SELECT COUNT(*) FROM assets ${whereClause}`;
+        const countRes = await pool.query(countQuery, values);
+        const totalItems = parseInt(countRes.rows[0].count);
+
+        // --- 3. CONSULTA DE DATOS PAGINADOS ---
+        // Añadimos LIMIT y OFFSET al final
+        let dataQuery = `SELECT * FROM assets ${whereClause} ORDER BY created_at DESC`;
+        
+        // Añadimos parámetros para limit y offset
+        values.push(currentLimit);
+        dataQuery += ` LIMIT $${values.length}`;
+        
+        values.push(offset);
+        dataQuery += ` OFFSET $${values.length}`;
+
+        const response = await pool.query(dataQuery, values);
+        
+        // --- 4. RESPUESTA ESTRUCTURADA ---
+        res.status(200).json({
+            total: totalItems,         // Total para que el front calcule páginas
+            page: currentPage,         // Página actual
+            limit: currentLimit,       // Límite usado
+            count: response.rowCount,  // Cuántos llegaron en este "chunk"
+            data: response.rows        // Los assets
+        });
+
     } catch (err) {
         next(err);
     }

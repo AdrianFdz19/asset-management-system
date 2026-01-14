@@ -16,8 +16,16 @@ export type Asset = {
     image_public_id: string | null;
 };
 
+export interface AssetFilters {
+    search?: string;
+    categoryId?: string;
+    status?: string;
+    page?: number;
+    limit?: number;
+}
+
 // 1. Dile al adaptador que manejará objetos de tipo 'Asset'
-const assetsAdapter = createEntityAdapter<Asset>({
+export const assetsAdapter = createEntityAdapter<Asset>({
     sortComparer: (a, b) => String(b.created_at).localeCompare(String(a.created_at)),
 });
 
@@ -25,20 +33,26 @@ const initialState = assetsAdapter.getInitialState();
 
 const assetsSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
-        getAssets: builder.query<EntityState<Asset, number>, void>({ // Tipamos el retorno
-            query: () => '/assets',
-            transformResponse: (res: { data: Asset[] }) => {
-                // Pasamos solo el array res.data al adaptador
-                return assetsAdapter.setAll(initialState, res.data);
+        getAssets: builder.query<EntityState<Asset, number> & { totalCount: number }, AssetFilters>({
+            query: (params) => ({
+                url: '/assets',
+                params: {
+                    search: params.search,
+                    categoryId: params.categoryId,
+                    status: params.status === 'all' ? undefined : params.status,
+                    page: params.page,   // <-- ASEGÚRATE DE QUE ESTÉN AQUÍ
+                    limit: params.limit  // <-- ASEGÚRATE DE QUE ESTÉN AQUÍ
+                }
+            }),
+            transformResponse: (res: { data: Asset[], total: number }) => {
+                // Esto está perfecto: crea un estado limpio para cada página
+                const state = assetsAdapter.setAll(assetsAdapter.getInitialState(), res.data);
+                return {
+                    ...state,
+                    totalCount: res.total
+                };
             },
-            providesTags: (result, error, arg) => {
-                if (result?.ids) {
-                    return [
-                        { type: 'Assets', id: 'LIST' },
-                        ...result.ids.map((id: number) => ({ type: 'Assets' as const, id }))
-                    ];
-                } else return [{ type: 'Assets', id: 'LIST' }];
-            }
+            providesTags: (result) => [{ type: 'Assets', id: 'PARTIAL-LIST' }],
         }),
         addAsset: builder.mutation({
             query: (newAsset) => ({
@@ -54,13 +68,13 @@ const assetsSlice = apiSlice.injectEndpoints({
         }),
         updateAsset: builder.mutation({
             query: (asset) => ({
-                url: `/assets/${asset.id}`, 
-                method: 'PUT', 
+                url: `/assets/${asset.id}`,
+                method: 'PUT',
                 body: asset
-            }), 
+            }),
             invalidatesTags: (result, err, arg) => {
                 return [
-                    { type: 'Assets', id: 'List' }, 
+                    { type: 'Assets', id: 'List' },
                     { type: 'Assets', id: arg.id }
                 ]
             }
@@ -71,25 +85,11 @@ const assetsSlice = apiSlice.injectEndpoints({
                 method: 'PATCH',
                 body: { status }
             }),
-            async onQueryStarted({ id, status }, { dispatch, queryFulfilled }) {
-                const patchResult = dispatch(
-                    assetsSlice.util.updateQueryData('getAssets', undefined, (draft) => {
-                        const asset = draft.entities[id];
-                        if (asset) {
-                            asset.status = status;
-                        }
-                    })
-                );
-                try {
-                    await queryFulfilled
-                } catch {
-                    patchResult.undo()
-                }
-            }
+            invalidatesTags: (result, err, arg) => [{ type: 'Assets', id: arg.id }]
         }),
         deleteAsset: builder.mutation({
             query: ({ id }) => ({
-                url: `/assets/${id}`, 
+                url: `/assets/${id}`,
                 method: 'DELETE'
             }),
             invalidatesTags: (res, err, arg) => {
@@ -110,18 +110,26 @@ const assetsSlice = apiSlice.injectEndpoints({
     }),
 });
 
-export const selectAssetsResult = assetsSlice.endpoints.getAssets.select();
-export const selectAssetsData = createSelector(
-    selectAssetsResult,
-    assetsResult => assetsResult.data
-);
+// SELECTORES
+// 1. Obtenemos los selectores base del adaptador
+const adapterSelectors = assetsAdapter.getSelectors();
 
-export const {
-    selectAll: selectAllAssets,
-    selectIds: selectAssetsIds,
-    selectById: selectAssetById,
-} = assetsAdapter.getSelectors((state: RootState) => selectAssetsData(state) ?? initialState);
+// 2. Selector para un Asset individual (usado en Detail y Excerpt)
+// Este selector busca en la caché por defecto (filtros vacíos)
+export const selectAssetById = (state: RootState, id: number) => {
+    const assetsResult = assetsSlice.endpoints.getAssets.select({})(state);
+    const assetsData = assetsResult.data ?? initialState;
+    return adapterSelectors.selectById(assetsData, id);
+};
 
+// 3. Si necesitas un selectAll que apunte a la caché base:
+export const selectAllAssets = (state: RootState) => {
+    const assetsResult = assetsSlice.endpoints.getAssets.select({})(state);
+    const assetsData = assetsResult.data ?? initialState;
+    return adapterSelectors.selectAll(assetsData);
+};
+
+// Exportamos los hooks generados
 export const {
     useGetAssetsQuery,
     useAddAssetMutation,
