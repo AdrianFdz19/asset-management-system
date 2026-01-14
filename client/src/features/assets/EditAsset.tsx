@@ -12,7 +12,7 @@ export default function EditAsset() {
     const navigate = useNavigate();
 
     // Obtener datos de Redux
-    const { isLoading: isLoadingAssets } = useGetAssetsQuery();
+    const { isLoading: isLoadingAssets } = useGetAssetsQuery({});
     const { isLoading: isLoadingCategories } = useGetCategoriesQuery();
     const { isLoading: isLoadingUsers } = useGetUsersQuery();
     const asset = useAppSelector((state: RootState) => selectAssetById(state, Number(assetId)));
