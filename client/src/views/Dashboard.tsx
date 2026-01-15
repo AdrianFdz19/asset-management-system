@@ -26,77 +26,66 @@ export default function Dashboard() {
                 <p className="text-slate-500 font-medium">Real-time statistics of your asset inventory.</p>
             </header>
 
-            {/* Grid de Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-
+            {/* 1. Grid de Stats: Ahora con 5 columnas en LG para que todas quepan en una fila */}
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-10">
                 <StatCard
-                    title="Total Inventory Value"
+                    title="Total Value"
                     value={`$${stats?.total_value.toLocaleString()}`}
-                    icon="💰"
-                    bgColor="bg-emerald-50"
-                    textColor="text-emerald-600"
+                    icon="💰" bgColor="bg-emerald-50" textColor="text-emerald-600"
                 />
-
                 <StatCard
                     title="Total Assets"
                     value={stats?.asset_count}
-                    icon="📦"
-                    bgColor="bg-blue-50"
-                    textColor="text-blue-600"
+                    icon="📦" bgColor="bg-blue-50" textColor="text-blue-600"
                 />
-
                 <StatCard
                     title="Categories"
                     value={stats?.category_count}
-                    icon="🏷️"
-                    bgColor="bg-purple-50"
-                    textColor="text-purple-600"
+                    icon="🏷️" bgColor="bg-purple-50" textColor="text-purple-600"
                 />
-
                 <StatCard
-                    title="Most Valuable Asset"
+                    title="Top Asset"
                     value={stats?.top_asset_name}
-                    icon="🏆"
-                    bgColor="bg-amber-50"
-                    textColor="text-amber-600"
-                    isSmallText={true}
+                    icon="🏆" bgColor="bg-amber-50" textColor="text-amber-600" isSmallText={true}
                 />
-
                 <StatCard
-                    title="Operational Readiness"
+                    title="Readiness"
                     value={`${availabilityRate}%`}
-                    icon="⚡"
-                    bgColor="bg-indigo-50"
-                    textColor="text-indigo-600"
+                    icon="⚡" bgColor="bg-indigo-50" textColor="text-indigo-600"
                 />
             </div>
 
-            {/* Espacio para gráficas o lista reciente */}
-            {/* Dashboard.tsx */}
-            <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Gráfica - Ocupa 2 columnas en pantallas grandes */}
-                <div className="lg:col-span-2">
+            {/* 2. Sección de Gráficas: Distribución 2/3 y 1/3 o 50/50 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                {/* Gráfica de Categorías */}
+                <div className="w-full">
                     <CategoryChart data={stats?.category_distribution || []} />
                 </div>
 
-                <div className="lg:col-span-2">
+                {/* Gráfica de Estatus */}
+                <div className="w-full">
                     <StatusOverview data={stats?.status_distribution || []} />
                 </div>
+            </div>
 
-                {/* Panel lateral de ayuda o stats rápidos */}
-                <div className="bg-slate-900 rounded-2xl p-8 text-white flex flex-col justify-between overflow-hidden relative">
-                    <div className="relative z-10">
-                        <h3 className="text-xl font-bold mb-2">Inventory Health</h3>
-                        <p className="text-slate-400 text-sm">You have {stats?.asset_count} assets distributed in {stats?.category_count} categories.</p>
-                    </div>
-                    <div className="mt-8 relative z-10">
-                        <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all">
-                            Download Report
-                        </button>
-                    </div>
-                    {/* Un círculo decorativo de fondo */}
-                    <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl"></div>
+            {/* 3. Panel Inferior: "Inventory Health" ahora a lo ancho para cerrar el diseño */}
+            <div className="bg-slate-900 rounded-3xl p-8 text-white flex flex-col md:flex-row items-center justify-between overflow-hidden relative shadow-xl">
+                <div className="relative z-10 mb-6 md:mb-0">
+                    <h3 className="text-2xl font-bold mb-2">Inventory Health Report</h3>
+                    <p className="text-slate-400 max-w-md">
+                        Your system is tracking {stats?.asset_count} assets across {stats?.category_count} specialized categories.
+                        Operational readiness is currently at {availabilityRate}%.
+                    </p>
                 </div>
+                <div className="relative z-10">
+                    <button className="bg-white text-slate-900 hover:bg-blue-50 px-8 py-4 rounded-2xl font-bold transition-all shadow-lg flex items-center gap-2">
+                        <span>Download Full Report</span>
+                        <span className="text-xs text-slate-400">PDF</span>
+                    </button>
+                </div>
+                {/* Círculos decorativos para dar profundidad */}
+                <div className="absolute -top-10 -right-10 w-64 h-64 bg-blue-600/20 rounded-full blur-3xl"></div>
+                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-indigo-600/10 rounded-full blur-3xl"></div>
             </div>
         </div>
     );
