@@ -5,8 +5,11 @@ import { selectAssetById, useGetAssetsQuery } from './assetsSlice';
 import { selectUserById, useGetUsersQuery } from '../users/usersSlice';
 import type { RootState } from '../../app/store';
 import { ArrowLeft, Edit3, Box, Cpu, DollarSign, Activity, Wrench, Archive } from 'lucide-react';
+import { useDemoMode } from '../../hooks/useDemoMode';
+import DemoRestrictionModal from '../../components/DemoRestrictionModal';
 
 export default function AssetDetail() {
+    const { isRestrictionOpen, setIsRestrictionOpen, protectAction } = useDemoMode();
     // Pasamos un objeto vacío para que RTK Query sepa qué "caja" de la caché mirar o llenar
     const { isLoading } = useGetAssetsQuery({});
     const { isLoading: isUsersLoading } = useGetUsersQuery();
@@ -59,7 +62,7 @@ export default function AssetDetail() {
                 </div>
 
                 <button
-                    onClick={() => navigate(`/assets/edit/${asset.id}`)}
+                    onClick={() => protectAction(() => navigate(`/assets/edit/${asset.id}`))}
                     className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-bold rounded-2xl hover:bg-blue-600 transition-all shadow-lg shadow-gray-200"
                 >
                     <Edit3 size={18} />
@@ -138,6 +141,9 @@ export default function AssetDetail() {
                     </div>
                 </div>
             </div>
+            {isRestrictionOpen && (
+                <DemoRestrictionModal onClose={() => setIsRestrictionOpen(false)} />
+            )}
         </main>
     )
 }

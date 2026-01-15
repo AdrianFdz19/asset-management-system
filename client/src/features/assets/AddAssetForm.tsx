@@ -3,8 +3,11 @@ import { useAddAssetMutation, useUploadImageMutation } from './assetsSlice';
 import { useAppSelector } from '../../app/hooks';
 import { selectAllCategories, useGetCategoriesQuery } from '../categories/categoriesSlice';
 import { selectAllUsers, useGetUsersQuery } from '../users/usersSlice';
+import { useDemoMode } from '../../hooks/useDemoMode';
+import DemoRestrictionModal from '../../components/DemoRestrictionModal';
 
 export default function AddAssetForm() {
+    const { isRestrictionOpen, setIsRestrictionOpen, protectAction } = useDemoMode();
     // 1. Estados iniciales (Mantenemos los tipos de tu objeto Asset)
     const [name, setName] = useState('');
     const [serialNumber, setSerialNumber] = useState('');
@@ -57,8 +60,7 @@ export default function AddAssetForm() {
         setUserId(userId);
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async () => {
         if (!canSubmit) return;
 
         setErrorMsg('');
@@ -126,6 +128,15 @@ export default function AddAssetForm() {
                 setErrorMsg(err.data?.message || 'Error processing request');
             }
         }
+    }; 
+
+    const onFormSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        // protectAction decidirá si ejecuta el submit o muestra el modal
+        protectAction(() => {
+            handleSubmit();
+        });
     };
 
     // Estilos constantes
@@ -185,7 +196,7 @@ export default function AddAssetForm() {
                 Register New Asset
             </h2>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={onFormSubmit} className="space-y-6">
 
                 {/* Fila 1: Nombre y Serial */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -311,6 +322,9 @@ export default function AddAssetForm() {
                     {isLoading ? 'Processing...' : 'Save Asset to Inventory'}
                 </button>
             </form>
+            {isRestrictionOpen && (
+                <DemoRestrictionModal onClose={() => setIsRestrictionOpen(false)} />
+            )}
         </section>
     );
 }

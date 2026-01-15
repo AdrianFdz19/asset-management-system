@@ -1,9 +1,10 @@
 import { useLogoutMutation } from '../features/api/apiSlice'
-import { Link, useLocation } from 'react-router-dom'; // Asumiendo que usas react-router
+import { Link, useLocation, useNavigate } from 'react-router-dom'; // Asumiendo que usas react-router
 
 export default function Header() {
     const [logout] = useLogoutMutation();
     const location = useLocation();
+    const navigate = useNavigate();
 
     const handleLogout = async () => {
         try {
@@ -23,7 +24,7 @@ export default function Header() {
                     
                     {/* Logo y Branding */}
                     <div className="flex items-center gap-8">
-                        <div className="flex items-center gap-2">
+                        <div className="cursor-pointer flex items-center gap-2" onClick={() => navigate('/')} >
                             <div className="bg-blue-600 p-1.5 rounded-lg">
                                 <span className="text-white text-xl">📦</span>
                             </div>

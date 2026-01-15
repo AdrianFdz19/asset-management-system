@@ -28,13 +28,42 @@ export const categoriesSlice = apiSlice.injectEndpoints({
                     return [{ type: 'Categories', id: 'LIST' }]
                 }
             }
+        }),
+        addCategory: builder.mutation({
+            query: (newCategory) => ({
+                url: '/categories',
+                method: 'POST',
+                body: newCategory
+            }),
+            invalidatesTags: (res, err, arg) => ([{ type: 'Categories' as const, id: 'LIST' }])
+        }),
+        updateCategory: builder.mutation({
+            query: (categoryUpdated) => ({
+                url: `/categories/${categoryUpdated.id}`,
+                method: 'PUT',
+                body: categoryUpdated
+            }),
+            invalidatesTags: (res, err, arg) => [
+                { type: 'Categories' as const, id: 'LIST' },
+                { type: 'Categories' as const, id: arg.id }
+            ]
+        }),
+        deleteCategory: builder.mutation({
+            query: ({ id }) => ({
+                url: `/categories/${id}`,
+                method: 'DELETE'
+            }),
+            invalidatesTags: (res, err, arg) => [
+                { type: 'Categories' as const, id: 'LIST' }, 
+                { type: 'Categories' as const, id: arg.id }
+            ]
         })
     })
 });
 
 export const selectCategoriesResult = categoriesSlice.endpoints.getCategories.select();
 export const selectCategoriesData = createSelector(
-    selectCategoriesResult, 
+    selectCategoriesResult,
     categoriesResult => categoriesResult.data
 );
 
@@ -46,5 +75,8 @@ export const {
 
 export const {
     useGetCategoriesQuery,
+    useAddCategoryMutation,
+    useUpdateCategoryMutation,
+    useDeleteCategoryMutation
 } = categoriesSlice;
 

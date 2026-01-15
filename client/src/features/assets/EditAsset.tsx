@@ -6,6 +6,8 @@ import { selectAllUsers, useGetUsersQuery } from '../users/usersSlice';
 import { selectAllCategories, useGetCategoriesQuery } from '../categories/categoriesSlice';
 import { ArrowLeft, Save, Trash2, Image as ImageIcon, Loader2 } from 'lucide-react';
 import type { RootState } from '../../app/store';
+import { useDemoMode } from '../../hooks/useDemoMode';
+import DemoRestrictionModal from '../../components/DemoRestrictionModal';
 
 export default function EditAsset() {
     const { assetId } = useParams();
