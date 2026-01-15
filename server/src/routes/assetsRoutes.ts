@@ -6,28 +6,10 @@ import upload from '../services/multer';
 
 export const assets = Router();
 
-/* assets.get('/', isAuth, async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const query = `
-            SELECT * FROM assets
-        `;
-        const response = await pool.query(query);
-        const data = response.rows;
-
-        res.status(200)
-            .json({
-                message: '',
-                data
-            });
-    } catch (err) {
-        next(err);
-    }
-}); */
-
 assets.get('/', isAuth, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { search, categoryId, status, page = 1, limit = 10 } = req.query;
-        
+
         // 1. Calculamos offset
         const currentPage = Math.max(1, Number(page));
         const currentLimit = Math.max(1, Number(limit));
@@ -62,16 +44,16 @@ assets.get('/', isAuth, async (req: Request, res: Response, next: NextFunction) 
         // --- 3. CONSULTA DE DATOS PAGINADOS ---
         // Añadimos LIMIT y OFFSET al final
         let dataQuery = `SELECT * FROM assets ${whereClause} ORDER BY created_at DESC`;
-        
+
         // Añadimos parámetros para limit y offset
         values.push(currentLimit);
         dataQuery += ` LIMIT $${values.length}`;
-        
+
         values.push(offset);
         dataQuery += ` OFFSET $${values.length}`;
 
         const response = await pool.query(dataQuery, values);
-        
+
         // --- 4. RESPUESTA ESTRUCTURADA ---
         res.status(200).json({
             total: totalItems,         // Total para que el front calcule páginas
@@ -230,8 +212,8 @@ assets.delete('/:id', isAuth, async (req: Request, res: Response, next: NextFunc
             }
         }
 
-        res.status(200).json({ 
-            message: 'Asset and associated media deleted successfully.' 
+        res.status(200).json({
+            message: 'Asset and associated media deleted successfully.'
         });
 
     } catch (err) {
@@ -242,6 +224,19 @@ assets.delete('/:id', isAuth, async (req: Request, res: Response, next: NextFunc
 assets.get('/dashboard-stats', isAuth, async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.userId;
     try {
+        // Consulta de categorias
+        const categoryGroupQuery = `
+            SELECT 
+                c.name as category_name, 
+                COUNT(a.id) as total 
+            FROM assets a
+            JOIN categories c ON a.category_id = c.id
+            WHERE a.user_id = $1
+            GROUP BY c.name;
+        `;
+        const categoryRes = await pool.query(categoryGroupQuery, [userId]);
+
+        // Consulta general
         const query = `
             SELECT
             -- 1. Agregados básicos
@@ -265,12 +260,14 @@ assets.get('/dashboard-stats', isAuth, async (req: Request, res: Response, next:
                 user_id = $1;
         `;
         const result = await pool.query(query, [userId]);
+
         const stats = result.rows[0];
         res.json({
             total_value: parseFloat(stats.total_value),
             asset_count: parseInt(stats.asset_count),
             category_count: parseInt(stats.category_count),
-            top_asset_name: stats.top_asset_name || 'N/A'
+            top_asset_name: stats.top_asset_name || 'N/A',
+            category_distribution: categoryRes.rows
         });
 
     } catch (err) {

@@ -7,6 +7,7 @@ import LayoutWithHeader from './layouts/LayoutWithHeader';
 import Dashboard from './views/Dashboard';
 import AssetDetail from './features/assets/AssetDetail';
 import EditAsset from './features/assets/EditAsset';
+import Categories from './features/categories/Categories';
 
 function App() {
 
@@ -26,6 +27,7 @@ function App() {
               <Route path='/assets/edit/:assetId' element={<EditAsset />} />
               <Route path='/' element={<h1>Dashboard Principal</h1>} />
               <Route path='/dashboard' element={<Dashboard />} ></Route>
+              <Route path='/categories' element={<Categories />} ></Route>
             </Route>
           </Route>
 

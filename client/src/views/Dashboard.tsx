@@ -6,6 +6,8 @@ export default function Dashboard() {
     if (isLoading || isFetching) return <div className="p-8 text-gray-500">Loading dashboard stats...</div>;
     if (isError) return <div className="p-8 text-red-500">Error loading data.</div>;
 
+    console.log(stats);
+
     return (
         <div className="p-6 lg:p-10 bg-[#f8fafc] min-h-screen">
             <header className="mb-10">
