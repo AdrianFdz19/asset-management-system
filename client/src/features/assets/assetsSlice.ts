@@ -77,6 +77,22 @@ const assetsSlice = apiSlice.injectEndpoints({
                     { type: 'Assets', id: 'List' },
                     { type: 'Assets', id: arg.id }
                 ]
+            },
+            async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+                // Actualizamos la lista que usa el selector selectAssetById
+                const patchList = dispatch(
+                    assetsSlice.util.updateQueryData('getAssets', {}, (draft: any) => {
+                        const asset = draft.entities[arg.id];
+                        // arg contiene los nuevos valores (name, status, etc.)
+                        if (asset) Object.assign(asset, arg);
+                    })
+                );
+
+                try {
+                    await queryFulfilled;
+                } catch {
+                    patchList.undo();
+                }
             }
         }),
         updateAssetStatus: builder.mutation({

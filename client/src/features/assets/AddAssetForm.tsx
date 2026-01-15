@@ -40,6 +40,23 @@ export default function AddAssetForm() {
     const isPending = isLoading;
     const canSubmit = canSave && !isPending;
 
+    // Changes inputs
+    const handleChangeStatus = (e: any) => {
+        let status = e.target.value;
+        if (status !== 'in-use') {
+            setUserId('');
+        }
+        setStatus(status);
+    }
+
+    const handleChangeAssignedUser = (e: any) => {
+        let userId = e.target.value;
+        if (userId) {
+            setStatus('in-use');
+        }
+        setUserId(userId);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!canSubmit) return;
@@ -52,6 +69,24 @@ export default function AddAssetForm() {
             setErrorMsg('');
 
             try {
+                // Verificacion de status
+                // 1. Si hay un usuario, el status DEBE ser 'in-use'
+                if (userId && status !== 'in-use') {
+                    setErrorMsg('Assets assigned to a user must have "In Use" status.');
+                    return;
+                }
+
+                // 2. Si el status es 'in-use', DEBE haber un usuario
+                if (status === 'in-use' && !userId) {
+                    setErrorMsg('In-use assets require an assignee.');
+                    return;
+                }
+
+                if ((status === 'maintenance' || status === 'retired' || status === 'available') && userId) {
+                    setErrorMsg(`Assets in "${status}" status cannot be assigned to a user.`);
+                    return;
+                }
+
                 // PASO 1: Si hay un archivo, subirlo primero
                 if (file) {
                     const formData = new FormData();
@@ -184,7 +219,7 @@ export default function AddAssetForm() {
                         <select
                             className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-gray-700 appearance-none cursor-pointer"
                             value={status}
-                            onChange={(e) => setStatus(e.target.value)}
+                            onChange={handleChangeStatus}
                         >
                             <option value="available">Available</option>
                             <option value="in-use">In Use</option>
@@ -237,7 +272,7 @@ export default function AddAssetForm() {
                         <select
                             className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-gray-700 cursor-pointer"
                             value={userId}
-                            onChange={(e) => setUserId(e.target.value)}
+                            onChange={handleChangeAssignedUser}
                         >
                             <option value="">None / In Storage</option>
                             {usersList.map(user => <option key={user.id} value={user.id}>{user.name}</option>)}

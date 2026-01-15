@@ -23,6 +23,7 @@ export default function EditAsset() {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [confirmName, setConfirmName] = useState(''); // Para el input de confirmación
     const [deleteAsset, { isLoading: isDeleting }] = useDeleteAssetMutation();
+    const [errorMsg, setErrorMsg] = useState('');
 
     // Imagen 1.-Añadimos un estado para el archivo seleccionado
     const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -89,8 +90,44 @@ export default function EditAsset() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    // Changes inputs
+    const handleChangeStatus = (e: any) => {
+        let status = e.target.value;
+        if (status !== 'in-use') {
+            setFormData(prev => ({ ...prev, user_id: '' }));
+        }
+        setFormData(prev => ({ ...prev, status }));
+    }
+
+    const handleChangeAssignedUser = (e: any) => {
+        let userId = e.target.value;
+        if (userId) {
+            setFormData(prev => ({ ...prev, status: 'in-use' }));
+        }
+        setFormData(prev => ({ ...prev, user_id: userId }));
+    };
+
     const onSaveAsset = async () => {
         try {
+            setErrorMsg('');
+            // Verificacion de status
+            // 1. Si hay un usuario, el status DEBE ser 'in-use'
+            if (formData.user_id && formData.status !== 'in-use') {
+                setErrorMsg('Assets assigned to a user must have "In Use" status.');
+                return;
+            }
+
+            // 2. Si el status es 'in-use', DEBE haber un usuario
+            if (formData.status === 'in-use' && !formData.user_id) {
+                setErrorMsg('In-use assets require an assignee.');
+                return;
+            }
+
+            if ((formData.status === 'maintenance' || formData.status === 'retired' || formData.status === 'available') && formData.user_id) {
+                setErrorMsg(`Assets in "${formData.status}" status cannot be assigned to a user.`);
+                return;
+            }
+
             // Por defecto, mantenemos los datos actuales de la imagen
             let image_url = asset.image_url;
             let image_public_id = asset.image_public_id;
@@ -123,7 +160,7 @@ export default function EditAsset() {
             navigate(`/assets/${assetId}`);
         } catch (err: any) {
             console.error("Failed to update asset:", err);
-            alert(err.data?.message || "Error updating asset");
+            setErrorMsg(err.data?.message || "Error updating asset")
         }
     };
 
@@ -235,7 +272,7 @@ export default function EditAsset() {
                                 <select
                                     name="status"
                                     value={formData.status}
-                                    onChange={handleChange}
+                                    onChange={handleChangeStatus}
                                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all cursor-pointer font-medium text-gray-700"
                                 >
                                     <option value="available">Available</option>
@@ -286,7 +323,7 @@ export default function EditAsset() {
                                 <select
                                     name="user_id"
                                     value={formData.user_id}
-                                    onChange={handleChange}
+                                    onChange={handleChangeAssignedUser}
                                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-medium text-gray-700"
                                 >
                                     <option value="">No user assigned</option>
@@ -294,6 +331,12 @@ export default function EditAsset() {
                                 </select>
                             </div>
                         </div>
+
+                        {errorMsg && (
+                            <div className="p-3 bg-red-50 border border-red-100 rounded-xl">
+                                <p className="text-xs text-red-600 font-bold">Error: {errorMsg}</p>
+                            </div>
+                        )}
 
                         <button
                             onClick={onSaveAsset}

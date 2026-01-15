@@ -16,9 +16,6 @@ export default function AssetExcerpt({ asset }: AssetExcerptType) {
 
     if (!asset) return null;
 
-    // Lógica para forzar 'in-use' si hay un usuario asignado
-    const displayStatus = asset.user_id ? 'in-use' : asset.status;
-
     return (
         <Link
             to={`/assets/${asset.id}`}
@@ -67,7 +64,7 @@ export default function AssetExcerpt({ asset }: AssetExcerptType) {
                     <h3 className="font-bold text-gray-900 text-sm line-clamp-1 flex-1 group-hover:text-blue-600 transition-colors">
                         {asset.name}
                     </h3>
-                    <StatusBadge status={displayStatus} />
+                    <StatusBadge status={asset.status} />
                 </div>
 
                 <div className="space-y-2 pt-2 border-t border-gray-50 mt-auto">

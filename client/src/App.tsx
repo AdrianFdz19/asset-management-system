@@ -8,6 +8,7 @@ import Dashboard from './views/Dashboard';
 import AssetDetail from './features/assets/AssetDetail';
 import EditAsset from './features/assets/EditAsset';
 import Categories from './features/categories/Categories';
+import UserPage from './features/users/UserPage';
 
 function App() {
 
@@ -16,18 +17,25 @@ function App() {
       <div className="app">
         <Routes>
           {/* Rutas Públicas */}
-          <Route path='/' element={<><h1>Assets System Manager</h1></>}></Route>
           <Route path='/signin' element={<SignIn />} />
 
           {/* Rutas Protegidas */}
           <Route element={<ProtectedRoute />}>
             <Route element={<LayoutWithHeader />} >
+              {/* ASSETS  */}
               <Route path='/assets' element={<AssetsList />} />
               <Route path='/assets/:assetId' element={<AssetDetail />} />
               <Route path='/assets/edit/:assetId' element={<EditAsset />} />
-              <Route path='/' element={<h1>Dashboard Principal</h1>} />
+
+              {/* HOME / DASHBOARD  */}
+              <Route path='/' element={<Dashboard />} />
               <Route path='/dashboard' element={<Dashboard />} ></Route>
+
+              {/* CATEGORIES  */}
               <Route path='/categories' element={<Categories />} ></Route>
+
+              {/* USER PROFILE */}
+              <Route path='/profile' element={<UserPage />} ></Route>
             </Route>
           </Route>
 

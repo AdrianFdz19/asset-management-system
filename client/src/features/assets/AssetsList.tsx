@@ -93,15 +93,11 @@ export default function AssetsList() {
     }
 
     return (
-        <main className="max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+        <main className="max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
 
             <header className="mb-10">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Inventory Assets</h1>
-                        <p className="text-gray-500 mt-1">Manage and track company resources with real-time filtering.</p>
-                    </div>
-                </div>
+                <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Inventory Assets</h1>
+                <p className="text-slate-500 font-medium mb-8">Manage and track company resources with real-time filtering.</p>
 
                 {/* --- BARRA DE BÚSQUEDA Y FILTROS --- */}
                 <div className="bg-white p-4 mb-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col md:flex-row items-center gap-4">
@@ -148,10 +144,10 @@ export default function AssetsList() {
                     </button>
                 </div>
 
-                {/* <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200 mb-12 shadow-inner">
+                <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200 mb-12 shadow-inner">
                     <h2 className="text-lg font-bold text-gray-800 mb-4">Add New Asset</h2>
                     <AddAssetForm />
-                </div> */}
+                </div>
             </header>
 
             <section>

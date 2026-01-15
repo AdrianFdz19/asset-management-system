@@ -17,7 +17,7 @@ export default function Header() {
     const isActive = (path: string) => location.pathname === path;
 
     return (
-        <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <header className="hidden lg:block bg-white border-b border-slate-200 sticky top-0 z-50">
             <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16 items-center">
                     
