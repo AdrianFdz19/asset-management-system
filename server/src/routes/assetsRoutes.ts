@@ -222,52 +222,53 @@ assets.delete('/:id', isAuth, async (req: Request, res: Response, next: NextFunc
 });
 
 assets.get('/dashboard-stats', isAuth, async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.userId;
     try {
-        // Consulta de categorias
+        const query = `
+            SELECT
+                COALESCE(SUM(value), 0) AS total_value,
+                COUNT(*) AS asset_count,
+                COUNT(DISTINCT category_id) AS category_count,
+                (
+                    SELECT name 
+                    FROM assets 
+                    ORDER BY value DESC 
+                    LIMIT 1
+                ) AS top_asset_name
+            FROM assets;
+        `;
+
         const categoryGroupQuery = `
             SELECT 
                 c.name as category_name, 
                 COUNT(a.id) as total 
             FROM assets a
             JOIN categories c ON a.category_id = c.id
-            WHERE a.user_id = $1
             GROUP BY c.name;
         `;
-        const categoryRes = await pool.query(categoryGroupQuery, [userId]);
 
-        // Consulta general
-        const query = `
-            SELECT
-            -- 1. Agregados básicos
-                COALESCE(SUM(value), 0) AS total_value,
-                COUNT(*) AS asset_count,
-    
-                -- 2. Conteo de categorías únicas
-                COUNT(DISTINCT category_id) AS category_count,
-    
-                 -- 3. Activo más caro (usando una subconsulta limitada a 1)
-                (
-                    SELECT name 
-                    FROM assets 
-                    WHERE user_id = $1 
-                    ORDER BY value DESC 
-                    LIMIT 1
-                ) AS top_asset_name
-            FROM 
-                assets
-            WHERE 
-                user_id = $1;
+        const statusGroupQuery = `
+            SELECT 
+                status, 
+                COUNT(*) as count 
+            FROM assets 
+            GROUP BY status;
         `;
-        const result = await pool.query(query, [userId]);
 
-        const stats = result.rows[0];
+        const [statsRes, categoryRes, statusRes] = await Promise.all([
+            pool.query(query),
+            pool.query(categoryGroupQuery),
+            pool.query(statusGroupQuery)
+        ]);
+
+        const stats = statsRes.rows[0];
+
         res.json({
             total_value: parseFloat(stats.total_value),
             asset_count: parseInt(stats.asset_count),
             category_count: parseInt(stats.category_count),
             top_asset_name: stats.top_asset_name || 'N/A',
-            category_distribution: categoryRes.rows
+            category_distribution: categoryRes.rows,
+            status_distribution: statusRes.rows
         });
 
     } catch (err) {

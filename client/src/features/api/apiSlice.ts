@@ -1,19 +1,12 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { logOut, setCredentials } from "../auth/authSlice";
+import type { DashboardStats } from "../../types/dashboard";
 
 interface User {
     id: number;
     name: string;
     email: string;
     avatar?: string;
-}
-
-// 1. Define una interfaz para tus estadísticas (esto es lo ideal en TS)
-interface DashboardStats {
-    total_value: number;
-    asset_count: number;
-    category_count: number;
-    top_asset_name: string;
 }
 
 export const apiSlice = createApi({
