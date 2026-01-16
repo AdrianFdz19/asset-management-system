@@ -1,6 +1,7 @@
 import React, { useState, type Dispatch, type SetStateAction } from 'react';
 import { useUpdateCategoryMutation, useDeleteCategoryMutation } from './categoriesSlice';
 import { Edit2, AlertCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 // Definimos el tipo de la categoría basado en tu estructura
 interface Category {
@@ -11,7 +12,7 @@ interface Category {
 interface EditCategoryProps {
     category: Category;
     setCategoryToEdit: Dispatch<SetStateAction<Category | null>>;
-}   
+}
 
 export default function EditCategory({ category, setCategoryToEdit }: EditCategoryProps) {
     const [editName, setEditName] = useState(category.name);
@@ -28,7 +29,15 @@ export default function EditCategory({ category, setCategoryToEdit }: EditCatego
         }
 
         try {
-            await updateCategory({ id: category.id, name: editName }).unwrap();
+            toast.promise(updateCategory({ id: category.id, name: editName }).unwrap(), {
+                loading: `Updating category to "${editName}"...`,
+                success: (data) => (
+                    <span>
+                        Category renamed to <b>{editName}</b>
+                    </span>
+                ),
+                error: (err) => err.data?.message || `Failed to update category`,
+            });
             setCategoryToEdit(null); // Cerrar modal al éxito
         } catch (err: any) {
             setErrorMsg(err.data?.message || 'Update failed. Try again.');
@@ -38,9 +47,9 @@ export default function EditCategory({ category, setCategoryToEdit }: EditCatego
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop */}
-            <div 
+            <div
                 className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity"
-                onClick={() => setCategoryToEdit(null)} 
+                onClick={() => setCategoryToEdit(null)}
             />
 
             {/* Modal Content */}
@@ -67,7 +76,7 @@ export default function EditCategory({ category, setCategoryToEdit }: EditCatego
                                 onChange={(e) => setEditName(e.target.value)}
                                 className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-2xl outline-none font-bold text-gray-700 transition-all"
                             />
-                            
+
                             {errorMsg && (
                                 <div className="flex items-center gap-2 mt-3 ml-2 text-red-500">
                                     <AlertCircle size={14} />
@@ -79,12 +88,12 @@ export default function EditCategory({ category, setCategoryToEdit }: EditCatego
                         <div className="flex flex-col gap-3 pt-4">
                             <button
                                 type="submit"
-                                disabled={isUpdating }
+                                disabled={isUpdating}
                                 className="w-full py-4 bg-gray-900 text-white font-black rounded-2xl hover:bg-blue-600 disabled:bg-gray-400 transition-all uppercase text-xs tracking-[0.2em] shadow-lg shadow-gray-200"
                             >
                                 {isUpdating ? 'Saving...' : 'Save Changes'}
                             </button>
-                            
+
                             <button
                                 type="button"
                                 onClick={() => setCategoryToEdit(null)}

@@ -8,8 +8,8 @@ import Dashboard from './views/Dashboard';
 import AssetDetail from './features/assets/AssetDetail';
 import EditAsset from './features/assets/EditAsset';
 import Categories from './features/categories/Categories';
-import UserPage from './features/users/UserPage';
 import { Toaster } from 'react-hot-toast';
+import UserProfile from './features/users/UserProfile';
 
 function App() {
 
@@ -37,7 +37,7 @@ function App() {
               <Route path='/categories' element={<Categories />} ></Route>
 
               {/* USER PROFILE */}
-              <Route path='/profile' element={<UserPage />} ></Route>
+              <Route path='/profile' element={<UserProfile />} ></Route>
             </Route>
           </Route>
 

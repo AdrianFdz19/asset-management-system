@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAddAssetMutation, useUploadImageMutation } from './assetsSlice';
 import { useAppSelector } from '../../app/hooks';
 import { selectAllCategories, useGetCategoriesQuery } from '../categories/categoriesSlice';
@@ -43,6 +43,18 @@ export default function AddAssetForm() {
 
     const isPending = isLoading;
     const canSubmit = canSave && !isPending;
+
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (isLoading || isPending || isUploading) {
+                e.preventDefault();
+                alert('You cant do that.') // El navegador mostrará un cuadro de diálogo estándar
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [isLoading, isPending, isUploading]);
 
     // Changes inputs
     const handleChangeStatus = (e: any) => {
@@ -90,30 +102,46 @@ export default function AddAssetForm() {
                     return;
                 }
 
-                // PASO 1: Si hay un archivo, subirlo primero
-                if (file) {
-                    const formData = new FormData();
-                    formData.append('image', file); // 'image' debe coincidir con upload.single('image')
+                const submitProcess = (async () => {
+                    // PASO 1: Si hay un archivo, subirlo primero
+                    if (file) {
+                        const formData = new FormData();
+                        formData.append('image', file); // 'image' debe coincidir con upload.single('image')
 
-                    const uploadResult = await uploadImage(formData).unwrap();
-                    image_url = uploadResult.url;
-                    image_public_id = uploadResult.public_id;
-                }
+                        const uploadResult = await uploadImage(formData).unwrap();
+                        image_url = uploadResult.url;
+                        image_public_id = uploadResult.public_id;
+                    }
 
-                // PASO 2: Crear el asset con la URL recibida
-                const newAsset = {
-                    name,
-                    serial_number: serialNumber,
-                    status,
-                    value,
-                    purchase_date: purchaseDate,
-                    category_id: Number(categoryId),
-                    user_id: userId ? Number(userId) : null,
-                    image_url,        // Enviamos la URL a Postgres
-                    image_public_id   // Enviamos el ID a Postgres
-                };
+                    // PASO 2: Crear el asset con la URL recibida
+                    const newAsset = {
+                        name,
+                        serial_number: serialNumber,
+                        status,
+                        value,
+                        purchase_date: purchaseDate,
+                        category_id: Number(categoryId),
+                        user_id: userId ? Number(userId) : null,
+                        image_url,        // Enviamos la URL a Postgres
+                        image_public_id   // Enviamos el ID a Postgres
+                    };
 
-                await addAsset(newAsset).unwrap();
+                    return await addAsset(newAsset).unwrap();
+                })();
+
+                toast.promise(submitProcess, {
+                    loading: 'Registering new asset...',
+                    success: (data) => (
+                        <span>
+                            <b>{data.name}</b> successfully added to inventory
+                        </span>
+                    ),
+                    error: (err) => {
+                        // Manejo de error inteligente: si es un error de validación o de red
+                        const errorMessage = err.data?.message || 'Could not save asset. Please try again.';
+                        return <b>{errorMessage}</b>;
+                    },
+                });
 
                 // RESETEAR TODOS LOS VALORES
                 setName('');
@@ -124,14 +152,6 @@ export default function AddAssetForm() {
                 setCategoryId('');
                 setUserId('');
 
-                toast.success('Asset created successfully!', {
-                    style: {
-                        borderRadius: '15px',
-                        background: '#333',
-                        color: '#fff',
-                        fontWeight: 'bold'
-                    },
-                });
             } catch (err: any) {
                 setErrorMsg(err.data?.message || 'Error processing request');
             }

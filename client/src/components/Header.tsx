@@ -43,7 +43,9 @@ export default function Header() {
 
                     {/* Acciones de Usuario */}
                     <div className="flex items-center gap-4">
-                        <div className="hidden sm:flex flex-col items-end mr-2">
+                        <div 
+                        onClick={()=>navigate('/profile')}
+                        className="cursor-pointer hidden sm:flex flex-col items-end mr-2">
                             <span className="text-xs font-bold text-slate-900">Admin User</span>
                             <span className="text-[10px] text-slate-500">Premium Account</span>
                         </div>

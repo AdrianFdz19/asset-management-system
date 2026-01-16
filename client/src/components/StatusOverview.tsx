@@ -21,7 +21,7 @@ function StatusOverview({ data }: { data: any[] }) {
                     <BarChart 
                         layout="vertical" 
                         data={data} 
-                        margin={{ left: 10, right: 60 }}
+                        margin={{ left: -20, right: 40, top: 0, bottom: 0 }}
                         barGap={8}
                     >
                         {/* Definición de degradados SVG */}
@@ -40,7 +40,7 @@ function StatusOverview({ data }: { data: any[] }) {
                             dataKey="status" 
                             type="category" 
                             tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700, textAnchor: 'start' }}
-                            width={120}
+                            width={100}
                             axisLine={false}
                             tickLine={false}
                             // Formatear el texto (ej: "inuse" -> "IN USE")
@@ -56,7 +56,7 @@ function StatusOverview({ data }: { data: any[] }) {
                         <Bar 
                             dataKey="count" 
                             radius={[0, 5, 5, 0]} 
-                            barSize={40}
+                            barSize={45}
                             background={{ fill: '#f1f5f9', radius: 10 }} // Barra de fondo gris
                         >
                             {data.map((entry, index) => (
@@ -68,6 +68,7 @@ function StatusOverview({ data }: { data: any[] }) {
                             <LabelList 
                                 dataKey="count" 
                                 position="right" 
+                                offset={10}
                                 style={{ fill: '#64748b', fontSize: 12, fontWeight: 800, paddingLeft: 10 }} 
                             />
                         </Bar>

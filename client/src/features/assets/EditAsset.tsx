@@ -7,8 +7,10 @@ import { selectAllCategories, useGetCategoriesQuery } from '../categories/catego
 import { ArrowLeft, Save, Trash2, Image as ImageIcon, Loader2 } from 'lucide-react';
 import type { RootState } from '../../app/store';
 import toast from 'react-hot-toast';
+import { useDemoMode } from '../../hooks/useDemoMode';
 
 export default function EditAsset() {
+    const { isRestrictionOpen, setIsRestrictionOpen, protectAction } = useDemoMode();
     const { assetId } = useParams();
     const navigate = useNavigate();
 
@@ -129,69 +131,66 @@ export default function EditAsset() {
                 return;
             }
 
-            // Por defecto, mantenemos los datos actuales de la imagen
-            let image_url = asset.image_url;
-            let image_public_id = asset.image_public_id;
+            // 2. Definimos la lógica de guardado en una promesa para el Toast
+            const updateProcess = (async () => {
+                let image_url = asset.image_url;
+                let image_public_id = asset.image_public_id;
 
-            // 1. Si el usuario seleccionó un archivo nuevo, lo subimos primero
-            if (selectedFile) {
-                const formData = new FormData();
-                formData.append('image', selectedFile);
+                if (selectedFile) {
+                    const imgData = new FormData();
+                    imgData.append('image', selectedFile);
+                    const uploadResult = await uploadImage(imgData).unwrap();
+                    image_url = uploadResult.url;
+                    image_public_id = uploadResult.public_id;
+                }
 
-                // Usamos el trigger de RTK Query que ya tienes
-                const uploadResult = await uploadImage(formData).unwrap();
+                const dataToSend = {
+                    id: Number(assetId),
+                    ...formData,
+                    image_url,
+                    image_public_id,
+                    category_id: Number(formData.category_id),
+                    user_id: formData.user_id ? Number(formData.user_id) : null,
+                };
 
-                image_url = uploadResult.url;
-                image_public_id = uploadResult.public_id;
-            }
+                return await updateAsset(dataToSend).unwrap();
+            })();
 
-            // 2. Construimos el objeto final para el update
-            const dataToSend = {
-                id: Number(assetId), // Aseguramos que sea número
-                ...formData,
-                image_url,
-                image_public_id,
-                // Convertimos tipos si es necesario
-                category_id: Number(formData.category_id),
-                user_id: formData.user_id ? Number(formData.user_id) : null,
-            };
-
-            await updateAsset(dataToSend).unwrap();
-            
-            toast.success('Asset updated successfully!', {
-                style: {
-                    borderRadius: '15px',
-                    background: '#333',
-                    color: '#fff',
-                    fontWeight: 'bold'
-                },
+            // 3. Lanzamos el Toast con la promesa
+            await toast.promise(updateProcess, {
+                loading: 'Updating asset...',
+                success: 'Asset updated successfully!',
+                error: (err) => err.data?.message || 'Error updating asset',
             });
+
             navigate(`/assets/${assetId}`);
+
         } catch (err: any) {
             console.error("Failed to update asset:", err);
-            setErrorMsg(err.data?.message || "Error updating asset")
         }
     };
 
     const onDeleteAsset = async () => {
         if (confirmName !== asset.name) return; // Doble validación de seguridad
 
-        try {
-            await deleteAsset({ id: asset.id }).unwrap();
-            setShowDeleteModal(false);
-            navigate('/assets'); // Redirigir al inventario tras borrar
-            toast.success('Asset deleted', {
-                style: {
-                    borderRadius: '15px',
-                    background: '#333',
-                    color: '#fff',
-                    fontWeight: 'bold'
-                },
-            });
-        } catch (err) {
-            console.error("Failed to delete:", err);
-            alert("Error deleting asset");
-        }
+        protectAction(async () => {
+            try {
+                await toast.promise(deleteAsset({ id: asset.id }).unwrap(), {
+                    loading: `Deleting ${asset.name}...`,
+                    success: <b>{asset.name} permanently removed</b>,
+                    error: (err) => {
+                        // Si el backend devuelve un error específico, lo mostramos
+                        const message = err.data?.message || `Could not delete ${asset.name}`;
+                        return <span>{message}</span>;
+                    },
+                });
+
+                setShowDeleteModal(false);
+                navigate('/assets');
+            } catch (err) {
+                console.error("Failed to delete:", err);
+            }
+        });
     };
 
     return (

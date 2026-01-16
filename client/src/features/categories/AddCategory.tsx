@@ -1,6 +1,7 @@
 import React, { useState, type Dispatch, type SetStateAction } from 'react'
 import { useAddCategoryMutation } from './categoriesSlice';
 import { Tag } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 interface AddCategoryProps {
     setIsModalOpen: Dispatch<SetStateAction<boolean>>;
@@ -25,8 +26,15 @@ export default function AddCategory({ setIsModalOpen }: AddCategoryProps) {
         setErrorMsg('');
 
         try {
-            await addCategory({ name: newCategoryName }).unwrap();
-            // Si llegamos aquí, fue exitoso
+            toast.promise(addCategory({ name: newCategoryName }).unwrap(), {
+                loading: `Creating category "${newCategoryName}"...`,
+                success: (data) => (
+                    <span>
+                        New category <b>{newCategoryName}</b> is ready to use
+                    </span>
+                ),
+                error: (err) => err.data?.message || `Failed to create category`,
+            });
             setIsModalOpen(false);
             setNewCategoryName('');
         } catch (err: any) {
