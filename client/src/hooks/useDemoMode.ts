@@ -7,7 +7,7 @@ export const useDemoMode = () => {
   const isDemoMode = import.meta.env.VITE_APP_MODE;
 
   const protectAction = (action: () => void) => {
-    if (isDemoMode) {
+    if (isDemoMode === 'demo') {
       setIsRestrictionOpen(true);
     } else {
       action();

@@ -6,8 +6,7 @@ import { selectAllUsers, useGetUsersQuery } from '../users/usersSlice';
 import { selectAllCategories, useGetCategoriesQuery } from '../categories/categoriesSlice';
 import { ArrowLeft, Save, Trash2, Image as ImageIcon, Loader2 } from 'lucide-react';
 import type { RootState } from '../../app/store';
-import { useDemoMode } from '../../hooks/useDemoMode';
-import DemoRestrictionModal from '../../components/DemoRestrictionModal';
+import toast from 'react-hot-toast';
 
 export default function EditAsset() {
     const { assetId } = useParams();
@@ -158,7 +157,15 @@ export default function EditAsset() {
             };
 
             await updateAsset(dataToSend).unwrap();
-            alert("Asset updated successfully!");
+            
+            toast.success('Asset updated successfully!', {
+                style: {
+                    borderRadius: '15px',
+                    background: '#333',
+                    color: '#fff',
+                    fontWeight: 'bold'
+                },
+            });
             navigate(`/assets/${assetId}`);
         } catch (err: any) {
             console.error("Failed to update asset:", err);
@@ -173,6 +180,14 @@ export default function EditAsset() {
             await deleteAsset({ id: asset.id }).unwrap();
             setShowDeleteModal(false);
             navigate('/assets'); // Redirigir al inventario tras borrar
+            toast.success('Asset deleted', {
+                style: {
+                    borderRadius: '15px',
+                    background: '#333',
+                    color: '#fff',
+                    fontWeight: 'bold'
+                },
+            });
         } catch (err) {
             console.error("Failed to delete:", err);
             alert("Error deleting asset");

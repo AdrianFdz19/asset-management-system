@@ -9,12 +9,14 @@ import AssetDetail from './features/assets/AssetDetail';
 import EditAsset from './features/assets/EditAsset';
 import Categories from './features/categories/Categories';
 import UserPage from './features/users/UserPage';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
 
   return (
     <>
       <div className="app">
+        <Toaster position="top-right" reverseOrder={false} />
         <Routes>
           {/* Rutas Públicas */}
           <Route path='/signin' element={<SignIn />} />

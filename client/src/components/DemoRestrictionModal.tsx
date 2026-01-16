@@ -42,7 +42,7 @@ export default function DemoRestrictionModal({ onClose }: DemoRestrictionModalPr
           <div className="w-full space-y-3">
             {/* Botón principal al Video */}
             <a 
-              href="TU_LINK_DE_YOUTUBE_O_LOOM" 
+              href="https://github.com/AdrianFdz19/asset-management-system" 
               target="_blank" 
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-3 w-full py-4 bg-gray-900 text-white font-black rounded-2xl hover:bg-blue-600 transition-all shadow-xl shadow-gray-200 uppercase text-xs tracking-widest"
@@ -53,7 +53,7 @@ export default function DemoRestrictionModal({ onClose }: DemoRestrictionModalPr
 
             {/* Botón secundario al Código */}
             <a 
-              href="TU_LINK_DE_GITHUB" 
+              href="https://github.com/AdrianFdz19/asset-management-system" 
               target="_blank" 
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-3 w-full py-4 bg-white border-2 border-gray-100 text-gray-500 font-bold rounded-2xl hover:bg-gray-50 transition-all uppercase text-[10px] tracking-widest"

@@ -5,6 +5,7 @@ import { selectAllCategories, useGetCategoriesQuery } from '../categories/catego
 import { selectAllUsers, useGetUsersQuery } from '../users/usersSlice';
 import { useDemoMode } from '../../hooks/useDemoMode';
 import DemoRestrictionModal from '../../components/DemoRestrictionModal';
+import toast from 'react-hot-toast';
 
 export default function AddAssetForm() {
     const { isRestrictionOpen, setIsRestrictionOpen, protectAction } = useDemoMode();
@@ -123,12 +124,19 @@ export default function AddAssetForm() {
                 setCategoryId('');
                 setUserId('');
 
-                alert("Asset added successfully!");
+                toast.success('Asset created successfully!', {
+                    style: {
+                        borderRadius: '15px',
+                        background: '#333',
+                        color: '#fff',
+                        fontWeight: 'bold'
+                    },
+                });
             } catch (err: any) {
                 setErrorMsg(err.data?.message || 'Error processing request');
             }
         }
-    }; 
+    };
 
     const onFormSubmit = (e: React.FormEvent) => {
         e.preventDefault();
