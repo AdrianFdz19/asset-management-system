@@ -22,6 +22,7 @@ export interface AssetFilters {
     status?: string;
     page?: number;
     limit?: number;
+    userId?: number;
 }
 
 // 1. Dile al adaptador que manejará objetos de tipo 'Asset'
@@ -41,7 +42,8 @@ const assetsSlice = apiSlice.injectEndpoints({
                     categoryId: params.categoryId,
                     status: params.status === 'all' ? undefined : params.status,
                     page: params.page,   // <-- ASEGÚRATE DE QUE ESTÉN AQUÍ
-                    limit: params.limit  // <-- ASEGÚRATE DE QUE ESTÉN AQUÍ
+                    limit: params.limit,  // <-- ASEGÚRATE DE QUE ESTÉN AQUÍ
+                    userId: params.userId
                 }
             }),
             transformResponse: (res: { data: Asset[], total: number }) => {
@@ -143,6 +145,12 @@ export const selectAllAssets = (state: RootState) => {
     const assetsResult = assetsSlice.endpoints.getAssets.select({})(state);
     const assetsData = assetsResult.data ?? initialState;
     return adapterSelectors.selectAll(assetsData);
+};
+
+// En tu assetsSlice, crea este hook/selector dedicado
+export const useUserAssets = (userId: number) => {
+    // Esto crea una entrada de caché UNICA para este usuario: getAssets({"userId": 8, "limit": 100})
+    return useGetAssetsQuery({ userId: userId, limit: 100 });
 };
 
 // Exportamos los hooks generados

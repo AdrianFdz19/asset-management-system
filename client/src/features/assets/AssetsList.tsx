@@ -27,6 +27,15 @@ export default function AssetsList() {
         limit: 10
     });
 
+    // Dentro de AssetsList.tsx
+    useEffect(() => {
+        // Esto moverá el scroll al top de la ventana cada vez que cambie el número de página
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth' // Opcional: para que el movimiento sea fluido y no brusco
+        });
+    }, [page]); // Escuchamos el cambio de 'page'
+
     // 4. PETICIÓN RTK QUERY
     // Al pasar 'debouncedParams', RTK Query crea una cache key única para esta combinación
     const {
@@ -39,6 +48,15 @@ export default function AssetsList() {
 
     const totalItems = assetsData?.totalCount || 0;
     const totalPages = Math.ceil(totalItems / limit);
+
+    // Genera un array de números [1, 2, 3...] basado en totalPages
+    const pageNumbers = useMemo(() => {
+        const pages = [];
+        for (let i = 1; i <= totalPages; i++) {
+            pages.push(i);
+        }
+        return pages;
+    }, [totalPages]);
 
     // 5. TRANSFORMACIÓN DE DATOS
     // Convertimos las entidades del adaptador en un array para el renderizado
@@ -168,27 +186,54 @@ export default function AssetsList() {
                         <p className="text-gray-400 font-medium text-lg">No assets found matching your criteria.</p>
                     </div>
                 )}
-                <div className="flex items-center justify-between mt-10 px-4 py-4 bg-white border border-gray-100 rounded-3xl shadow-sm">
-                    <button
-                        disabled={page === 1}
-                        onClick={() => setPage(p => p - 1)}
-                        className="px-4 py-2 text-sm font-bold text-gray-600 disabled:opacity-30 hover:text-blue-600 transition-colors"
-                    >
-                        ← Previous
-                    </button>
+                {/* --- SECCIÓN DE PAGINACIÓN --- */}
+                {totalPages > 1 && (
+                    <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-6 px-6 py-4 bg-white border border-slate-100 rounded-[2rem] shadow-sm">
 
-                    <span className="text-sm font-medium text-gray-500">
-                        Page <span className="text-gray-900 font-bold">{page}</span>
-                    </span>
+                        {/* Información de Resultados */}
+                        <div className="text-sm text-slate-500">
+                            Showing <span className="font-bold text-slate-900">{assets.length}</span> of{" "}
+                            <span className="font-bold text-slate-900">{totalItems}</span> assets
+                        </div>
 
-                    <button
-                        disabled={page >= totalPages || isFetching} // Desactivar si es la última página o si está cargando
-                        onClick={() => setPage(p => p + 1)}
-                        className="..."
-                    >
-                        Next →
-                    </button>
-                </div>
+                        {/* Controles de Navegación */}
+                        <div className="flex items-center gap-2">
+                            <button
+                                disabled={page === 1 || isFetching}
+                                onClick={() => setPage(p => p - 1)}
+                                className="p-2 rounded-xl hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-transparent text-slate-600 transition-all"
+                            >
+                                <span className="sr-only">Previous</span>
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+                            </button>
+
+                            {/* Números de Página Dinámicos */}
+                            <div className="flex items-center gap-1">
+                                {pageNumbers.map((n) => (
+                                    <button
+                                        key={n}
+                                        onClick={() => setPage(n)}
+                                        className={`w-10 h-10 rounded-xl text-sm font-bold transition-all ${page === n
+                                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
+                                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                                            }`}
+                                    >
+                                        {n}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <button
+                                disabled={page >= totalPages || isFetching}
+                                onClick={() => setPage(p => p + 1)}
+                                className="p-2 rounded-xl hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-transparent text-slate-600 transition-all"
+                            >
+                                <span className="sr-only">Next</span>
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                            </button>
+                        </div>
+                    </div>
+                )}
             </section>
         </main>
     );

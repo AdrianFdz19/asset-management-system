@@ -8,7 +8,8 @@ export const assets = Router();
 
 assets.get('/', isAuth, async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { search, categoryId, status, page = 1, limit = 10 } = req.query;
+        const { search, categoryId, status, userId, page = 1, limit = 10 } = req.query;
+        console.log(req.query);
 
         // 1. Calculamos offset
         const currentPage = Math.max(1, Number(page));
@@ -20,6 +21,11 @@ assets.get('/', isAuth, async (req: Request, res: Response, next: NextFunction) 
         const values: any[] = [];
 
         // --- FILTROS (Mantenemos tu lógica sólida) ---
+        if (userId) {
+            values.push(userId);
+            whereClause += ` AND user_id = $${values.length}`;
+        }
+
         if (search && typeof search === 'string' && search.trim() !== '') {
             values.push(`%${search.trim()}%`);
             whereClause += ` AND (name ILIKE $${values.length} OR serial_number ILIKE $${values.length})`;
