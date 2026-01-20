@@ -42,7 +42,7 @@ export default function DemoRestrictionModal({ onClose }: DemoRestrictionModalPr
           <div className="w-full space-y-3">
             {/* Botón principal al Video */}
             <a 
-              href="https://github.com/AdrianFdz19/asset-management-system" 
+              href="https://youtu.be/IwF-IAzvDDg?si=SaJ3ouOvWnkrymfv" 
               target="_blank" 
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-3 w-full py-4 bg-gray-900 text-white font-black rounded-2xl hover:bg-blue-600 transition-all shadow-xl shadow-gray-200 uppercase text-xs tracking-widest"

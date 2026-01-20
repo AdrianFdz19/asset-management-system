@@ -4,14 +4,15 @@ import { assetsAdapter, useGetAssetsQuery, type Asset } from './assetsSlice';
 import { selectAllCategories, useGetCategoriesQuery } from '../categories/categoriesSlice';
 import AddAssetForm from './AddAssetForm';
 import AssetExcerpt from './AssetExcerpt';
-import { Search, RotateCcw, Loader2, Filter } from 'lucide-react';
+import { Search, RotateCcw, Loader2, Filter, Plus, X } from 'lucide-react';
 
 export default function AssetsList() {
     // 1. CARGA DE CATEGORÍAS (Para el Select)
     const { isLoading: isCatsLoading } = useGetCategoriesQuery();
     const categories = useAppSelector(selectAllCategories);
     const [page, setPage] = useState(1);
-    const [limit] = useState(10); // 10 items por página
+    const [limit] = useState(8); // 8 items por página
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     // 2. ESTADOS LOCALES (Controlan los inputs de forma instantánea)
     const [searchTerm, setSearchTerm] = useState('');
@@ -24,7 +25,7 @@ export default function AssetsList() {
         categoryId: '',
         status: 'all',
         page: 1,
-        limit: 10
+        limit: 8
     });
 
     // Dentro de AssetsList.tsx
@@ -117,54 +118,67 @@ export default function AssetsList() {
                 <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Inventory Assets</h1>
                 <p className="text-slate-500 font-medium mb-8">Manage and track company resources with real-time filtering.</p>
 
-                {/* --- BARRA DE BÚSQUEDA Y FILTROS --- */}
-                <div className="bg-white p-4 mb-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col md:flex-row items-center gap-4">
-                    <div className="relative flex-1 w-full">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                        <input
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="Search by name or serial..."
-                            className="w-full pl-10 pr-4 py-2 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
-                        />
+                {/* --- BARRA DE HERRAMIENTAS UNIFICADA --- */}
+                <div className="flex flex-col xl:flex-row gap-4 items-center">
+
+                    {/* Lado Izquierdo: Buscador y Filtros */}
+                    <div className="bg-white p-2 md:p-3 flex-1 w-full rounded-[2rem] border border-gray-100 shadow-sm flex flex-col md:flex-row items-center gap-3">
+
+                        {/* Input de Búsqueda */}
+                        <div className="relative flex-1 w-full">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                            <input
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder="Search by name or serial..."
+                                className="w-full pl-11 pr-4 py-2.5 bg-gray-50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-sm"
+                            />
+                        </div>
+
+                        {/* Selectores y Reset */}
+                        <div className="flex items-center gap-2 w-full md:w-auto">
+                            <select
+                                value={catId}
+                                onChange={(e) => setCatId(e.target.value)}
+                                className="flex-1 md:w-40 bg-gray-50 border-none rounded-2xl py-2.5 px-4 outline-none focus:ring-2 focus:ring-blue-500/20 text-sm cursor-pointer"
+                            >
+                                <option value="">All Categories</option>
+                                {categories.map(cat => (
+                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                ))}
+                            </select>
+
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                className="flex-1 md:w-40 bg-gray-50 border-none rounded-2xl py-2.5 px-4 outline-none focus:ring-2 focus:ring-blue-500/20 text-sm cursor-pointer"
+                            >
+                                <option value="all">All Status</option>
+                                <option value="available">Available</option>
+                                <option value="in-use">In Use</option>
+                                <option value="maintenance">Maintenance</option>
+                                <option value="retired">Retired</option>
+                            </select>
+
+                            <button
+                                onClick={resetFilters}
+                                className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                title="Reset Filters"
+                            >
+                                <RotateCcw size={20} />
+                            </button>
+                        </div>
                     </div>
 
-                    <select
-                        value={catId}
-                        onChange={(e) => setCatId(e.target.value)}
-                        className="w-full md:w-48 bg-gray-50 border-none rounded-xl py-2 px-4 outline-none focus:ring-2 focus:ring-blue-500/20"
-                    >
-                        <option value="">All Categories</option>
-                        {categories.map(cat => (
-                            <option key={cat.id} value={cat.id}>{cat.name}</option>
-                        ))}
-                    </select>
-
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="w-full md:w-48 bg-gray-50 border-none rounded-xl py-2 px-4 outline-none focus:ring-2 focus:ring-blue-500/20"
-                    >
-                        <option value="all">All Status</option>
-                        <option value="available">Available</option>
-                        <option value="maintenance">Maintenance</option>
-                        <option value="inuse">In Use</option>
-                        <option value="retired">Retired</option>
-                    </select>
-
+                    {/* Lado Derecho: Botón de Acción Principal */}
                     <button
-                        onClick={resetFilters}
-                        className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                        title="Reset Filters"
+                        onClick={() => setIsModalOpen(true)}
+                        className="w-full xl:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-[1.5rem] font-bold shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2 whitespace-nowrap"
                     >
-                        <RotateCcw size={20} />
+                        <Plus size={20} strokeWidth={3} />
+                        Add New Asset
                     </button>
-                </div>
-
-                <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200 mb-12 shadow-inner">
-                    <h2 className="text-lg font-bold text-gray-800 mb-4">Add New Asset</h2>
-                    <AddAssetForm />
                 </div>
             </header>
 
@@ -235,6 +249,37 @@ export default function AssetsList() {
                     </div>
                 )}
             </section>
+            {/* --- MODAL PARA AGREGAR ASSET --- */}
+            {isModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+                    {/* Backdrop (Fondo oscuro) */}
+                    <div
+                        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+                        onClick={() => setIsModalOpen(false)}
+                    />
+
+                    {/* Contenedor del Modal */}
+                    <div className="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="p-8">
+                            <div className="flex justify-between items-center mb-6">
+                                <div>
+                                    <h2 className="text-2xl font-black text-slate-900">New Asset</h2>
+                                    <p className="text-slate-500 text-sm">Fill in the details to register a new resource.</p>
+                                </div>
+                                <button
+                                    onClick={() => setIsModalOpen(false)}
+                                    className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors"
+                                >
+                                    <X size={20} className="cursor-pointer" /> {/* O usa un icono X de Lucide */}
+                                </button>
+                            </div>
+
+                            {/* Pasamos el cierre del modal al formulario por si quieres cerrarlo tras éxito */}
+                            <AddAssetForm onSuccess={() => setIsModalOpen(false)} />
+                        </div>
+                    </div>
+                </div>
+            )}
         </main>
     );
 }

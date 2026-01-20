@@ -54,7 +54,10 @@ const assetsSlice = apiSlice.injectEndpoints({
                     totalCount: res.total
                 };
             },
-            providesTags: (result) => [{ type: 'Assets', id: 'PARTIAL-LIST' }],
+            providesTags: (result) => [
+                { type: 'Assets', id: 'LIST' },
+                ...(result?.ids.map(id => ({ type: 'Assets' as const, id })) || [])
+            ],
         }),
         addAsset: builder.mutation({
             query: (newAsset) => ({
@@ -76,7 +79,7 @@ const assetsSlice = apiSlice.injectEndpoints({
             }),
             invalidatesTags: (result, err, arg) => {
                 return [
-                    { type: 'Assets', id: 'List' },
+                    { type: 'Assets', id: 'LIST' },
                     { type: 'Assets', id: arg.id }
                 ]
             },
@@ -110,12 +113,10 @@ const assetsSlice = apiSlice.injectEndpoints({
                 url: `/assets/${id}`,
                 method: 'DELETE'
             }),
-            invalidatesTags: (res, err, arg) => {
-                return [
-                    { type: 'Assets', id: 'List' },
-                    { type: 'Assets', id: arg.id }
-                ]
-            }
+            invalidatesTags: (res, err, arg) => [
+                { type: 'Assets', id: 'LIST' }, // Esto dispara el re-fetch de la lista
+                { type: 'Assets', id: arg.id }  // Esto limpia el cache del item individual
+            ]
         }),
         uploadImage: builder.mutation<{ url: string; public_id: string }, FormData>({
             query: (formData) => ({

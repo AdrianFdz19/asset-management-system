@@ -8,7 +8,7 @@ export const assets = Router();
 
 assets.get('/', isAuth, async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { search, categoryId, status, userId, page = 1, limit = 10 } = req.query;
+        const { search, categoryId, status, userId, page = 1, limit = 8 } = req.query;
         console.log(req.query);
 
         // 1. Calculamos offset
